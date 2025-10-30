@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Optional
 from pydantic import BaseModel, EmailStr
 
 class UserRole(str, Enum):
@@ -7,6 +8,7 @@ class UserRole(str, Enum):
     ADMIN = 'admin'
     
 class User(BaseModel):
+    _id: Optional[str] = None
     name: str
     surnames: str
     email: EmailStr
