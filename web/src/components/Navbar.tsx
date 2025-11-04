@@ -26,7 +26,7 @@ export default function Navbar() {
         <div className="flex gap-2">
           <Link
             href="/login"
-            className="px-4 py-1.5 rounded border hover:bg-neutral-50 transition"
+            className="px-4 py-1.5 rounded border hover:bg-neutral-50 text-black transition"
           >
             Iniciar Sesión
           </Link>
