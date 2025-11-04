@@ -3,14 +3,15 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr
 
 class UserRole(str, Enum):
-    CLIENT = 'client'
-    PROVIDER = 'provider'
-    ADMIN = 'admin'
-    
+    CLIENT = 'cliente'
+    PROVIDER = 'proveedor'
+    ADMIN = 'administrador'
+
 class User(BaseModel):
     _id: Optional[str] = None
     name: str
     surnames: str
     email: EmailStr
+    phone: int
     password: str
     role: UserRole = UserRole.CLIENT

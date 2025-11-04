@@ -7,16 +7,14 @@ collection = db['users']
 
 def registerUser(user: User):
     try:
-        exist = collection.find_one({'email': user.email})
-        if exist:
-            return ResponseMessage.message404
+        exists = collection.find_one({'email': user.email})
+        if exists:
+            return ResponseMessage.message409
         
         result = collection.insert_one(user.model_dump())
-        created = collection.find_one({'_id': result.inserted_id})
 
-        if created:
-            created['_id'] = str(created['_id'])
-            return {**ResponseMessage.message200, "data": created}
+        if result.inserted_id:
+            return ResponseMessage.message200
             
         return ResponseMessage.message400
 
@@ -62,17 +60,18 @@ def updateUser(userId: str, user: User):
         if not ObjectId.is_valid(userId):
             return ResponseMessage.message400
         
-        exist = collection.find_one({'email': user.email})
-        if exist:
+        _user = collection.find_one({'_id': ObjectId(userId)})
+        if not _user:
+            return ResponseMessage.message404
+        
+        exists = collection.find_one({'email': user.email})
+        
+        if exists and str(exists['_id']) != userId:
             return ResponseMessage.message409
         
-        user = collection.find_one({'_id': ObjectId(userId)})
-        if user:
-            updated = collection.update_one({'_id': ObjectId(userId)}, {'$set': user.model_dump()})
-            if updated.modified_count > 0:
-                return ResponseMessage.message200
-        else:
-            ResponseMessage.message404
+        updated = collection.update_one({'_id': ObjectId(userId)}, {'$set': user.model_dump()})
+        if updated.modified_count > 0:
+            return ResponseMessage.message200
         
     except:
         return ResponseMessage.message500

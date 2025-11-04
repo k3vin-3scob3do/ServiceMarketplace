@@ -13,7 +13,7 @@ def getUsers(role: UserRole = UserRole.CLIENT):
     return user_controller.getUsers(role)
 
 @router.get("/{userId}")
-def getUser(userId):
+def getUser(userId: str):
     return user_controller.getUser(userId)
 
 @router.put("/update/{userId}")
@@ -21,5 +21,5 @@ def updateUser(userId, user: User):
     return user_controller.updateUser(userId, user)
 
 @router.delete("/delete/{userId}")
-def deleteUser(userId):
+def deleteUser(userId: str):
     return user_controller.deleteUser(userId)
