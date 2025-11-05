@@ -7,6 +7,12 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "cdn-media-1.freecodecamp.org" },
       { protocol: "https", hostname: "placehold.co" },
     ],
+    domains: [
+      "cdn-icons-png.flaticon.com",
+      "i.pinimg.com",
+      "cdn-media-1.freecodecamp.org",
+      "placehold.co",
+    ],
   },
 };
 

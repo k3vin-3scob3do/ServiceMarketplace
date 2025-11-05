@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { Briefcase } from "lucide-react";
+import { Briefcase, Shield, Store } from "lucide-react";
 
 export default function Navbar() {
   return (
@@ -17,8 +17,21 @@ export default function Navbar() {
           <Link href="/services" className="hover:text-pink-600 transition">
             Servicios
           </Link>
-          <Link href="/categories" className="hover:text-pink-600 transition">
-            Categorías
+
+          <Link
+            href="/provider"
+            className="flex items-center gap-1 hover:text-pink-600 transition"
+          >
+            <Store className="w-4 h-4" />
+            Panel Proveedor
+          </Link>
+
+          <Link
+            href="/admin"
+            className="flex items-center gap-1 hover:text-pink-600 transition"
+          >
+            <Shield className="w-4 h-4" />
+            Panel Admin
           </Link>
         </div>
 
