@@ -1,8 +1,23 @@
 "use client";
-import { Users, Briefcase, Handshake, TrendingUp, Lock, Edit, UserPlus, Eye, X, Check } from "lucide-react";
+import {
+  Users,
+  Briefcase,
+  Handshake,
+  TrendingUp,
+  Lock,
+  Edit,
+  UserPlus,
+  Eye,
+  X,
+  Check,
+} from "lucide-react";
 import Image from "next/image";
+import { useState } from "react";
+import NewUserForm from "./new-user/page";
 
 export default function AdminDashboard() {
+  const [showUserModal, setShowUserModal] = useState(false);
+
   return (
     <main className="min-h-screen bg-gray-50 text-gray-900">
       {/* HEADER */}
@@ -71,13 +86,36 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-lg shadow p-5">
             <h3 className="font-semibold mb-4">Top Proveedores</h3>
             {[
-              { rank: 1, name: "María González", category: "Desarrollo Web", contracts: 89, change: "+15%" },
-              { rank: 2, name: "Carlos Ruiz", category: "Diseño Gráfico", contracts: 76, change: "+8%" },
-              { rank: 3, name: "Ana López", category: "Marketing Digital", contracts: 64, change: "-3%" },
+              {
+                rank: 1,
+                name: "María González",
+                category: "Desarrollo Web",
+                contracts: 89,
+                change: "+15%",
+              },
+              {
+                rank: 2,
+                name: "Carlos Ruiz",
+                category: "Diseño Gráfico",
+                contracts: 76,
+                change: "+8%",
+              },
+              {
+                rank: 3,
+                name: "Ana López",
+                category: "Marketing Digital",
+                contracts: 64,
+                change: "-3%",
+              },
             ].map((p, i) => (
-              <div key={i} className="flex items-center justify-between py-2 border-b last:border-0">
+              <div
+                key={i}
+                className="flex items-center justify-between py-2 border-b last:border-0"
+              >
                 <div className="flex items-center gap-3">
-                  <div className="text-lg font-bold text-gray-700">{p.rank}</div>
+                  <div className="text-lg font-bold text-gray-700">
+                    {p.rank}
+                  </div>
                   <div>
                     <p className="font-medium">{p.name}</p>
                     <p className="text-sm text-gray-500">{p.category}</p>
@@ -97,9 +135,14 @@ export default function AdminDashboard() {
           <div className="flex justify-between items-center mb-4">
             <div>
               <h3 className="text-lg font-semibold">Gestión de Usuarios</h3>
-              <p className="text-sm text-gray-600">Administra usuarios, roles y permisos de la plataforma</p>
+              <p className="text-sm text-gray-600">
+                Administra usuarios, roles y permisos de la plataforma
+              </p>
             </div>
-            <button className="flex items-center gap-2 bg-pink-600 text-white px-3 py-1.5 rounded hover:bg-pink-700 text-sm">
+            <button
+              onClick={() => setShowUserModal(true)}
+              className="flex items-center gap-2 bg-pink-600 text-white px-3 py-1.5 rounded hover:bg-pink-700 text-sm"
+            >
               <UserPlus className="w-4 h-4" />
               Nuevo Usuario
             </button>
@@ -136,9 +179,27 @@ export default function AdminDashboard() {
             </thead>
             <tbody>
               {[
-                { name: "María González", email: "maria@email.com", rol: "Proveedor", estado: "Verificado", fecha: "15 Ene 2025" },
-                { name: "Carlos Ruiz", email: "carlos@email.com", rol: "Cliente", estado: "Pendiente", fecha: "12 Ene 2025" },
-                { name: "Ana López", email: "ana@email.com", rol: "Proveedor", estado: "Bloqueado", fecha: "08 Ene 2025" },
+                {
+                  name: "María González",
+                  email: "maria@email.com",
+                  rol: "Proveedor",
+                  estado: "Verificado",
+                  fecha: "15 Ene 2025",
+                },
+                {
+                  name: "Carlos Ruiz",
+                  email: "carlos@email.com",
+                  rol: "Cliente",
+                  estado: "Pendiente",
+                  fecha: "12 Ene 2025",
+                },
+                {
+                  name: "Ana López",
+                  email: "ana@email.com",
+                  rol: "Proveedor",
+                  estado: "Bloqueado",
+                  fecha: "08 Ene 2025",
+                },
               ].map((u, i) => (
                 <tr key={i} className="border-b hover:bg-gray-50">
                   <td className="py-2">
@@ -196,8 +257,20 @@ export default function AdminDashboard() {
             </thead>
             <tbody>
               {[
-                { servicio: "Diseño de Logo Profesional", proveedor: "María González", categoria: "Diseño Gráfico", estado: "Pendiente", precio: "$150" },
-                { servicio: "Desarrollo Web Responsive", proveedor: "Carlos Ruiz", categoria: "Desarrollo Web", estado: "Aprobado", precio: "$500" },
+                {
+                  servicio: "Diseño de Logo Profesional",
+                  proveedor: "María González",
+                  categoria: "Diseño Gráfico",
+                  estado: "Pendiente",
+                  precio: "$150",
+                },
+                {
+                  servicio: "Desarrollo Web Responsive",
+                  proveedor: "Carlos Ruiz",
+                  categoria: "Desarrollo Web",
+                  estado: "Aprobado",
+                  precio: "$500",
+                },
               ].map((s, i) => (
                 <tr key={i} className="border-b hover:bg-gray-50">
                   <td className="py-2">
@@ -220,19 +293,35 @@ export default function AdminDashboard() {
             </tbody>
           </table>
         </div>
+        {showUserModal && (
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
+            onClick={() => setShowUserModal(false)}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="relative bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg shadow-lg"
+            >
+              <NewUserForm />
+            </div>
+          </div>
+        )}
       </section>
     </main>
   );
 }
 
-/** 🔹 Componente de tarjeta de estadística */
 function StatCard({ title, value, icon, change }: any) {
   return (
     <div className="bg-white shadow rounded-lg p-5 flex items-center justify-between">
       <div>
         <p className="text-sm text-gray-600">{title}</p>
         <h2 className="text-2xl font-bold mt-1">{value}</h2>
-        <p className={`text-sm ${change.startsWith("-") ? "text-red-500" : "text-green-600"}`}>
+        <p
+          className={`text-sm ${
+            change.startsWith("-") ? "text-red-500" : "text-green-600"
+          }`}
+        >
           {change}
         </p>
       </div>
