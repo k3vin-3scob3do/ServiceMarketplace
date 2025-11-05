@@ -11,7 +11,7 @@ class User(BaseModel):
     _id: Optional[str] = None
     name: str
     surnames: str
-    email: EmailStr
+    email: EmailStr 
     phone: int
     password: str
     role: UserRole = UserRole.CLIENT
