@@ -175,7 +175,7 @@ export default function NewServiceForm() {
             ))}
 
             {["Mañana", "Tarde"].map((t) => (
-              <>
+              <div key={t} className="contents">
                 <span className="text-gray-600 font-medium">{t}</span>
                 {["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].map((d) => (
                   <input
@@ -185,7 +185,7 @@ export default function NewServiceForm() {
                     onChange={() => toggleDay(`${t}-${d}`)}
                   />
                 ))}
-              </>
+              </div>
             ))}
           </div>
         )}
