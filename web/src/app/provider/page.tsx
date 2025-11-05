@@ -1,8 +1,23 @@
 "use client";
-import { Briefcase, DollarSign, Star, FileText, Eye, Edit, Trash2, Check, X } from "lucide-react";
+import {
+  Briefcase,
+  DollarSign,
+  Star,
+  FileText,
+  Eye,
+  Edit,
+  Trash2,
+  Check,
+  X,
+} from "lucide-react";
+import { useState } from "react";
 import Image from "next/image";
+import { Plus } from "lucide-react";
+import NewServiceForm from "./new-service/page";
 
 export default function ProviderDashboard() {
+  const [showModal, setShowModal] = useState(false);
+
   return (
     <main className="min-h-screen bg-gray-50 text-gray-900">
       {/* HEADER */}
@@ -28,8 +43,16 @@ export default function ProviderDashboard() {
       <section className="max-w-7xl mx-auto px-6 py-10 space-y-10">
         {/* MÉTRICAS PRINCIPALES */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
-          <StatCard title="Servicios Publicados" value="12" icon={<Briefcase className="w-6 h-6 text-gray-600" />} />
-          <StatCard title="Solicitudes Pendientes" value="5" icon={<FileText className="w-6 h-6 text-gray-600" />} />
+          <StatCard
+            title="Servicios Publicados"
+            value="12"
+            icon={<Briefcase className="w-6 h-6 text-gray-600" />}
+          />
+          <StatCard
+            title="Solicitudes Pendientes"
+            value="5"
+            icon={<FileText className="w-6 h-6 text-gray-600" />}
+          />
           <StatCard
             title="Reseña Promedio"
             value={
@@ -43,13 +66,21 @@ export default function ProviderDashboard() {
               </div>
             }
           />
-          <StatCard title="Ingresos Generados" value="$2,450" icon={<DollarSign className="w-6 h-6 text-gray-600" />} />
+          <StatCard
+            title="Ingresos Generados"
+            value="$2,450"
+            icon={<DollarSign className="w-6 h-6 text-gray-600" />}
+          />
         </div>
 
         {/* PUBLICAR NUEVO SERVICIO */}
         <div>
-          <button className="flex items-center gap-2 bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700 transition">
-            + Publicar Nuevo Servicio
+          <button
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-2 bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700 transition"
+          >
+            <Plus className="w-5 h-5" />
+            Publicar Nuevo Servicio
           </button>
         </div>
 
@@ -122,8 +153,16 @@ export default function ProviderDashboard() {
             <div className="bg-white rounded-lg shadow p-5">
               <h4 className="font-semibold mb-4">Solicitudes Recientes</h4>
               {[
-                { name: "María González", servicio: "Diseño de Logo", fecha: "15 Ene 2025" },
-                { name: "Carlos Ruiz", servicio: "Desarrollo Web", fecha: "14 Ene 2025" },
+                {
+                  name: "María González",
+                  servicio: "Diseño de Logo",
+                  fecha: "15 Ene 2025",
+                },
+                {
+                  name: "Carlos Ruiz",
+                  servicio: "Desarrollo Web",
+                  fecha: "14 Ene 2025",
+                },
               ].map((req, i) => (
                 <div key={i} className="border rounded-lg p-3 mb-3">
                   <div className="flex items-center gap-3">
@@ -157,23 +196,31 @@ export default function ProviderDashboard() {
               <h4 className="font-semibold mb-4">Notificaciones</h4>
               <ul className="space-y-3 text-sm">
                 <li className="border-b pb-2">
-                  <p className="font-medium text-gray-800">📩 Nueva solicitud recibida</p>
+                  <p className="font-medium text-gray-800">
+                    📩 Nueva solicitud recibida
+                  </p>
                   <p className="text-gray-600">
-                    Ana López solicita tu servicio de <strong>Diseño de Logo</strong>
+                    Ana López solicita tu servicio de{" "}
+                    <strong>Diseño de Logo</strong>
                   </p>
                   <p className="text-xs text-gray-400">Hace 2 horas</p>
                 </li>
                 <li className="border-b pb-2">
-                  <p className="font-medium text-gray-800">⭐ Nueva reseña recibida</p>
+                  <p className="font-medium text-gray-800">
+                    ⭐ Nueva reseña recibida
+                  </p>
                   <p className="text-gray-600">
                     Pedro Martín te ha dejado una reseña de 5 estrellas
                   </p>
                   <p className="text-xs text-gray-400">Hace 5 horas</p>
                 </li>
                 <li>
-                  <p className="font-medium text-gray-800">🔄 Servicio actualizado</p>
+                  <p className="font-medium text-gray-800">
+                    🔄 Servicio actualizado
+                  </p>
                   <p className="text-gray-600">
-                    Tu servicio <strong>Consultoría SEO</strong> ha sido revisado
+                    Tu servicio <strong>Consultoría SEO</strong> ha sido
+                    revisado
                   </p>
                   <p className="text-xs text-gray-400">Hace 1 día</p>
                 </li>
@@ -181,6 +228,21 @@ export default function ProviderDashboard() {
             </div>
           </div>
         </div>
+        {/* MODAL DE NUEVO SERVICIO */}
+        {showModal && (
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
+            onClick={() => setShowModal(false)}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="relative bg-white w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-lg shadow-lg"
+            >
+              {/* Formulario */}
+              <NewServiceForm />
+            </div>
+          </div>
+        )}
       </section>
     </main>
   );
@@ -207,7 +269,11 @@ function StatusBadge({ estado }: { estado: string }) {
     Bloqueado: "bg-gray-800 text-white",
   };
   return (
-    <span className={`px-2 py-1 text-xs rounded-full font-medium ${colors[estado] || "bg-gray-200"}`}>
+    <span
+      className={`px-2 py-1 text-xs rounded-full font-medium ${
+        colors[estado] || "bg-gray-200"
+      }`}
+    >
       {estado}
     </span>
   );
