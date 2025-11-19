@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from models.service import Service, ServiceCategory
+from models.service import Service, ServiceCategory, ServiceStatus
 from controllers import service_controller
 
 router = APIRouter(prefix = "/service", tags = ["Service"])
@@ -9,7 +9,7 @@ def registerService(service: Service):
     return service_controller.registerService(service)
 
 @router.get("/")
-def getServices(category: ServiceCategory = ServiceCategory.OTHER):
+def getServices(category: ServiceCategory, status: ServiceStatus):
     return service_controller.getServices(category)
 
 @router.get("/{serviceId}")
@@ -23,3 +23,7 @@ def updateService(serviceId, service: Service):
 @router.delete("/delete/{serviceId}")
 def deleteService(serviceId: str):
     return service_controller.deleteService(serviceId)
+
+@router.post("/status/{serviceId}")
+def updateStatus(serviceId: str, status: ServiceStatus):
+    return service_controller.updateStatus(serviceId, status)

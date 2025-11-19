@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from controllers import user_controller
-from models.user import User, UserRole
+from models.user import User, UserRole, UserStatus
 
-router = APIRouter(prefix = "/user", tags = ["Auth"])
+router = APIRouter(prefix = "/user", tags = ["User"])
 
 @router.post("/register")
 def registerUser(user: User):
@@ -23,3 +23,7 @@ def updateUser(userId, user: User):
 @router.delete("/delete/{userId}")
 def deleteUser(userId: str):
     return user_controller.deleteUser(userId)
+
+@router.put("/status/{userId}")
+def updateStatus(userId: str, status: UserStatus):
+    return user_controller.updateStatus(userId, status)

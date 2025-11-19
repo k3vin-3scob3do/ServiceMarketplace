@@ -1,4 +1,4 @@
-from models.user import User, UserRole
+from models.user import User, UserRole, UserStatus
 from database import db
 from bson import ObjectId
 from utils import ResponseMessage
@@ -73,6 +73,8 @@ def updateUser(userId: str, user: User):
         if updated.modified_count > 0:
             return ResponseMessage.message200
         
+        return ResponseMessage.message400
+        
     except:
         return ResponseMessage.message500
 
@@ -82,12 +84,38 @@ def deleteUser(userId: str):
             return ResponseMessage.message400
         
         user = collection.find_one({'_id': ObjectId(userId)})
-        if user:
-            deleted = collection.delete_one({'_id': ObjectId(userId)})
-            if deleted.deleted_count > 0:
-                return ResponseMessage.message200
-        else:
+        if not user:
             return ResponseMessage.message404
+        
+        services = db['services'].find_one({'provider_id': userId})
+        if services:
+            return ResponseMessage.message401
+        
+        contract = db['contracts'].find_one({'user_id': userId})
+        if contract:
+            return ResponseMessage.message401
+        
+        deleted = collection.delete_one({'_id': ObjectId(userId)})
+        if deleted.deleted_count > 0:
+            return ResponseMessage.message200
+        
+        return ResponseMessage.message404
+        
+    except:
+        return ResponseMessage.message500
+
+def updateStatus(userId: str, status: UserStatus):
+    try:
+        if not ObjectId.is_valid(userId):
+            return ResponseMessage.message400
+        
+        user = db['users'].find_one({'_id': ObjectId(userId)})
+        if user:
+            updated = db['users'].update_many({'_id': ObjectId(userId)}, {'$set': {'status': status}})
+            if updated.modified_count > 0:
+                return ResponseMessage.message200
+        
+        return ResponseMessage.message400
         
     except:
         return ResponseMessage.message500

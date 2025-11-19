@@ -7,11 +7,16 @@ class UserRole(str, Enum):
     PROVIDER = 'proveedor'
     ADMIN = 'administrador'
 
+class UserStatus(str, Enum):
+    PENDING = 'pendiente'
+    VERIFIED = 'verificado'
+    BLOCKED = 'bloqueado'
+    
 class User(BaseModel):
     _id: Optional[str] = None
     name: str
-    surnames: str
     email: EmailStr 
     phone: int
     password: str
     role: UserRole = UserRole.CLIENT
+    status: Optional[UserStatus] = UserStatus.PENDING

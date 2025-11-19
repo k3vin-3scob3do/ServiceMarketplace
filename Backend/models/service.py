@@ -12,15 +12,21 @@ class ServiceCategory(str, Enum):
     CREATIVE = 'creatividad'
     MARKETING = 'marketing'
     OTHER = 'otro'
+    ALL = 'todas'
 
+class ServiceStatus(str, Enum):
+    PENDING = 'pendiente'
+    APPROVED = 'aprovado'
+    REJECTED = 'rechazado'
 
 class Service(BaseModel):
     _id: Optional[str] = None
-    category: ServiceCategory = ServiceCategory.OTHER
+    category: ServiceCategory = ServiceCategory.ALL
     name: str
     provider_id: str
     description: str
     price: float
+    status: ServiceStatus = ServiceStatus.PENDING
     
     
     
