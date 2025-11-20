@@ -10,13 +10,39 @@ import {
   Check,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Plus } from "lucide-react";
 import NewServiceForm from "./new-service/page";
+import { ServiceModel } from "../models/service";
+import { getServices } from "@/services/servicesService";
 
 export default function ProviderDashboard() {
   const [showModal, setShowModal] = useState(false);
+  const [services, setServices] = useState<ServiceModel[]>([]);
+  const [loadingServices, setLoadingServices] = useState(true);
+  const [errorServices, setErrorServices] = useState<string | null>(null);
+
+  const loadServices = async () => {
+    try {
+      const user = await JSON.parse(localStorage.getItem("currentUser") ?? "{}");
+
+      setLoadingServices(true);
+
+      const res = await getServices(null, null, user._id);
+      setServices(res.data);
+
+    } catch (error) {
+      console.error(error);
+      setErrorServices("Error al cargar servicios");
+    } finally {
+      setLoadingServices(false);
+    }
+  };
+
+  useEffect(() => {
+    loadServices();
+  }, []);
 
   return (
     <main className="min-h-screen bg-gray-50 text-gray-900">
@@ -94,55 +120,81 @@ export default function ProviderDashboard() {
               <thead>
                 <tr className="border-b text-gray-600">
                   <th className="text-left py-2">Servicio</th>
+                  <th>Proveedor</th>
                   <th>Categoría</th>
-                  <th>Precio</th>
                   <th>Estado</th>
+                  <th>Precio</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
+  
               <tbody>
-                {[
-                  {
-                    name: "Diseño de Logo",
-                    desc: "Creación de identidad visual",
-                    categoria: "Diseño Gráfico",
-                    precio: "$150",
-                    estado: "Activo",
-                  },
-                  {
-                    name: "Desarrollo Web",
-                    desc: "Sitio web completo",
-                    categoria: "Programación",
-                    precio: "$800",
-                    estado: "Borrador",
-                  },
-                  {
-                    name: "Consultoría SEO",
-                    desc: "Optimización web",
-                    categoria: "Marketing",
-                    precio: "$300",
-                    estado: "Bloqueado",
-                  },
-                ].map((s, i) => (
-                  <tr key={i} className="border-b hover:bg-gray-50">
-                    <td className="py-2">
-                      <div>
-                        <p className="font-medium">{s.name}</p>
-                        <p className="text-xs text-gray-500">{s.desc}</p>
-                      </div>
-                    </td>
-                    <td className="text-center">{s.categoria}</td>
-                    <td className="text-center">{s.precio}</td>
-                    <td className="text-center">
-                      <StatusBadge estado={s.estado} />
-                    </td>
-                    <td className="flex gap-2 justify-center py-2 text-gray-600">
-                      <Edit className="w-4 h-4 cursor-pointer hover:text-blue-600" />
-                      <Eye className="w-4 h-4 cursor-pointer hover:text-pink-600" />
-                      <Trash2 className="w-4 h-4 cursor-pointer hover:text-red-600" />
+                {loadingServices && (
+                  <tr>
+                    <td colSpan={6} className="text-center py-4 text-gray-500">
+                      Cargando servicios...
                     </td>
                   </tr>
-                ))}
+                )}
+  
+                {errorServices && (
+                  <tr>
+                    <td colSpan={6} className="text-center py-4 text-red-500">
+                      {errorServices}
+                    </td>
+                  </tr>
+                )}
+  
+                {!loadingServices && !errorServices && services.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="text-center py-4 text-gray-500">
+                      No hay servicios registrados
+                    </td>
+                  </tr>
+                )}
+  
+                {!loadingServices &&
+                  services.map((s) => (
+                    <tr key={s._id} className="border-b hover:bg-gray-50">
+                      {/* Servicio */}
+                      <td className="py-1">
+                        <div>
+                          <p className="font-medium">{s.name}</p>
+                          <p className="text-gray-500 text-xs">
+                            {s.provider_email}
+                          </p>
+                        </div>
+                      </td>
+  
+                      {/* Proveedor */}
+                      <td className="text-center">
+                        {s.provider_name ?? "Sin proveedor"}
+                      </td>
+  
+                      {/* Categoría */}
+                      <td className="text-center">
+                        {s.category}
+                      </td>
+  
+                      {/* Estado */}
+                      <td className="text-center">
+                        {s.status}
+                      </td>
+  
+                      {/* Precio */}
+                      <td className="text-center">
+                        ${s.price}
+                      </td>
+  
+                      {/* Acciones */}
+                      <td className="flex gap-2 justify-center py-2 text-gray-600">
+                        <Edit className="w-4 h-4 cursor-pointer hover:text-pink-600" />
+                        <Check className="w-4 h-4 cursor-pointer hover:text-green-600" />
+                        <X className="w-4 h-4 cursor-pointer hover:text-red-600" />
+                        <Eye className="w-4 h-4 cursor-pointer hover:text-blue-600" />
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>

@@ -12,7 +12,6 @@ class ServiceCategory(str, Enum):
     CREATIVE = 'creatividad'
     MARKETING = 'marketing'
     OTHER = 'otro'
-    ALL = 'todas'
 
 class ServiceStatus(str, Enum):
     PENDING = 'pendiente'
@@ -21,7 +20,7 @@ class ServiceStatus(str, Enum):
 
 class Service(BaseModel):
     _id: Optional[str] = None
-    category: ServiceCategory = ServiceCategory.ALL
+    category: ServiceCategory = ServiceCategory.OTHER
     name: str
     provider_id: str
     description: str

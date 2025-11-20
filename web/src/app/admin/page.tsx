@@ -17,14 +17,21 @@ import NewUserForm from "./new-user/page";
 import { UserModel, UserRole, UserStatus } from "../models/user";
 import { getUsers } from "@/services/userService";
 import { ApiResponse } from "@/app/models/response";
+import { ServiceCategory, ServiceModel, ServiceStatus } from "../models/service";
+import { getServices } from "@/services/servicesService";
 
 export default function AdminDashboard() {
   const [showUserModal, setShowUserModal] = useState(false);
   const [users, setUsers] = useState<UserModel[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
+  const [services, setServices] = useState<ServiceModel[]>([]);
+  const [loadingServices, setLoadingServices] = useState(true);
   const [errorUsers, setErrorUsers] = useState<string | null>(null);
+  const [errorServices, setErrorServices] = useState<string | null>(null);
   const [filterRole, setFilterRole] = useState<UserRole>(UserRole.ALL);
   const [filterStatus, setFilterStatus] = useState<UserStatus>(UserStatus.ALL);
+  const [filterCategory, setFilterCategory] = useState<ServiceCategory>(ServiceCategory.ALL);
+  const [filterStatusService, setFilterStatusService] = useState<ServiceStatus>(ServiceStatus.ALL);
 
   const loadUsers = async () => {
     try {
@@ -44,9 +51,31 @@ export default function AdminDashboard() {
     }
   };
 
+  const loadServices = async () => {
+    try {
+      setLoadingServices(true);
+
+      const categoryParam = filterCategory !== ServiceCategory.ALL ? filterCategory : undefined;
+      const statusParam = filterStatusService !== ServiceStatus.ALL ? filterStatusService : undefined;
+
+      const res = await getServices(categoryParam, statusParam);
+      setServices(res.data);
+
+    } catch (error) {
+      console.error(error);
+      setErrorServices("Error al cargar servicios");
+    } finally {
+      setLoadingServices(false);
+    }
+  };
+
   useEffect(() => {
     loadUsers();
   }, [filterRole, filterStatus]);
+
+  useEffect(() => {
+    loadServices();
+  }, [filterCategory, filterStatusService]);
   
   return (
     <main className="min-h-screen bg-gray-50 text-gray-900">
@@ -277,16 +306,32 @@ export default function AdminDashboard() {
               placeholder="Buscar servicios..."
               className="border rounded-md px-3 py-1 w-full text-sm"
             />
-            <select className="border rounded-md px-2 py-1 text-sm">
-              <option>Todas las categorías</option>
-              <option>Diseño</option>
-              <option>Web</option>
+            <select
+              className="border rounded-md px-2 py-1 text-sm"
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value as ServiceCategory)}
+            >
+              <option value={ServiceCategory.ALL}>Todas las categorías</option>
+
+              <option value={ServiceCategory.TECHNOLOGY}>Tecnología</option>
+              <option value={ServiceCategory.EDUCATION}>Educación</option>
+              <option value={ServiceCategory.HEALTH}>Salud</option>
+              <option value={ServiceCategory.HOME}>Hogar</option>
+              <option value={ServiceCategory.BUSINESS}>Negocios</option>
+              <option value={ServiceCategory.TRANSPORT}>Transporte</option>
+              <option value={ServiceCategory.CREATIVE}>Creatividad</option>
+              <option value={ServiceCategory.MARKETING}>Marketing</option>
+              <option value={ServiceCategory.OTHER}>Otro</option>
             </select>
-            <select className="border rounded-md px-2 py-1 text-sm">
-              <option>Todos los estados</option>
-              <option>Aprobado</option>
-              <option>Pendiente</option>
-              <option>Rechazado</option>
+            <select
+              className="border rounded-md px-2 py-1 text-sm"
+              value={filterStatusService}
+              onChange={(e) => setFilterStatusService(e.target.value as ServiceStatus)}
+            >
+              <option value="all">Todos los estados</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="aprovado">Aprobado</option>
+              <option value="rechazado">Rechazado</option>
             </select>
           </div>
 
@@ -301,41 +346,74 @@ export default function AdminDashboard() {
                 <th>Acciones</th>
               </tr>
             </thead>
+
             <tbody>
-              {[
-                {
-                  servicio: "Diseño de Logo Profesional",
-                  proveedor: "María González",
-                  categoria: "Diseño Gráfico",
-                  estado: "Pendiente",
-                  precio: "$150",
-                },
-                {
-                  servicio: "Desarrollo Web Responsive",
-                  proveedor: "Carlos Ruiz",
-                  categoria: "Desarrollo Web",
-                  estado: "Aprobado",
-                  precio: "$500",
-                },
-              ].map((s, i) => (
-                <tr key={i} className="border-b hover:bg-gray-50">
-                  <td className="py-2">
-                    <div>
-                      <p className="font-medium">{s.servicio}</p>
-                      <p className="text-gray-500 text-xs">Proyecto reciente</p>
-                    </div>
-                  </td>
-                  <td className="text-center">{s.proveedor}</td>
-                  <td className="text-center">{s.categoria}</td>
-                  <td className="text-center">{s.estado}</td>
-                  <td className="text-center">{s.precio}</td>
-                  <td className="flex gap-2 justify-center py-2 text-gray-600">
-                    <Check className="w-4 h-4 cursor-pointer hover:text-green-600" />
-                    <X className="w-4 h-4 cursor-pointer hover:text-red-600" />
-                    <Eye className="w-4 h-4 cursor-pointer hover:text-blue-600" />
+              {loadingServices && (
+                <tr>
+                  <td colSpan={6} className="text-center py-4 text-gray-500">
+                    Cargando servicios...
                   </td>
                 </tr>
-              ))}
+              )}
+
+              {errorServices && (
+                <tr>
+                  <td colSpan={6} className="text-center py-4 text-red-500">
+                    {errorServices}
+                  </td>
+                </tr>
+              )}
+
+              {!loadingServices && !errorServices && services.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="text-center py-4 text-gray-500">
+                    No hay servicios registrados
+                  </td>
+                </tr>
+              )}
+
+              {!loadingServices &&
+                services.map((s) => (
+                  <tr key={s._id} className="border-b hover:bg-gray-50">
+                    {/* Servicio */}
+                    <td className="py-1">
+                      <div>
+                        <p className="font-medium">{s.name}</p>
+                        <p className="text-gray-500 text-xs">
+                          {s.provider_email}
+                        </p>
+                      </div>
+                    </td>
+
+                    {/* Proveedor */}
+                    <td className="text-center">
+                      {s.provider_name ?? "Sin proveedor"}
+                    </td>
+
+                    {/* Categoría */}
+                    <td className="text-center">
+                      {s.category}
+                    </td>
+
+                    {/* Estado */}
+                    <td className="text-center">
+                      {s.status}
+                    </td>
+
+                    {/* Precio */}
+                    <td className="text-center">
+                      ${s.price}
+                    </td>
+
+                    {/* Acciones */}
+                    <td className="flex gap-2 justify-center py-2 text-gray-600">
+                      <Edit className="w-4 h-4 cursor-pointer hover:text-pink-600" />
+                      <Check className="w-4 h-4 cursor-pointer hover:text-green-600" />
+                      <X className="w-4 h-4 cursor-pointer hover:text-red-600" />
+                      <Eye className="w-4 h-4 cursor-pointer hover:text-blue-600" />
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>

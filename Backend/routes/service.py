@@ -9,8 +9,8 @@ def registerService(service: Service):
     return service_controller.registerService(service)
 
 @router.get("/")
-def getServices(category: ServiceCategory, status: ServiceStatus):
-    return service_controller.getServices(category)
+def getServices(category: ServiceCategory = None, status: ServiceStatus = None, providerId: str = ""):
+    return service_controller.getServices(category, status, providerId)
 
 @router.get("/{serviceId}")
 def getService(serviceId: str):
@@ -27,3 +27,7 @@ def deleteService(serviceId: str):
 @router.post("/status/{serviceId}")
 def updateStatus(serviceId: str, status: ServiceStatus):
     return service_controller.updateStatus(serviceId, status)
+
+# @router.get("/details")
+# def getDetails():
+#     return service_controller.getDetails()

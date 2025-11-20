@@ -23,23 +23,24 @@ def registerService(service: Service):
         return ResponseMessage.message500
 
 
-def getServices(category: ServiceCategory, status: ServiceStatus):
+def getServices(category: ServiceCategory, status: ServiceStatus, providerId: str):
     try:
-        services = []
-        request = {
-            'category': category,
-            'status': status
-        }
-        
-        if category == ServiceCategory.ALL:   
-            cursor = db['services'].find({})
-        else:
-            cursor = db['services'].find(request)
+        query = {}
+
+        if category:
+            query["category"] = category
+        if status:
+            query["status"] = status
+        if providerId:
+            query['provider_id'] = providerId
             
+        cursor = db['services'].find(query)
+        services = []
         for doc in cursor:
             provider = db['users'].find_one({'_id': ObjectId(doc['provider_id'])})
             doc['_id'] = str(doc['_id'])
             doc['provider_name'] = provider.get('name')
+            doc['provider_email'] = provider.get('email')
             services.append(doc)
 
         return {
