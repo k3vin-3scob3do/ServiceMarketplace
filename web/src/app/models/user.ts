@@ -4,8 +4,8 @@ export interface UserModel {
     email: string
     phone?: string
     password: string
-    role?: UserRole
-    status?: UserStatus
+    role?: UserRole | string
+    status?: UserStatus | string
     register_date?: string
 }
 
