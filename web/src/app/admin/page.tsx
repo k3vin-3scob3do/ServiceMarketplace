@@ -12,12 +12,42 @@ import {
   Check,
 } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import NewUserForm from "./new-user/page";
+import { UserModel, UserRole, UserStatus } from "../models/user";
+import { getUsers } from "@/services/userService";
+import { ApiResponse } from "@/services/response";
 
 export default function AdminDashboard() {
   const [showUserModal, setShowUserModal] = useState(false);
+  const [users, setUsers] = useState<UserModel[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [errorUsers, setErrorUsers] = useState<string | null>(null);
+  const [filterRole, setFilterRole] = useState<UserRole>(UserRole.ALL);
+  const [filterStatus, setFilterStatus] = useState<UserStatus>(UserStatus.ALL);
 
+  const loadUsers = async () => {
+    try {
+      setLoadingUsers(true);
+
+      const roleParam = filterRole !== UserRole.ALL ? filterRole : undefined;
+      const statusParam = filterStatus !== UserStatus.ALL ? filterStatus : undefined;
+
+      const res = await getUsers(roleParam, statusParam);
+      setUsers(res.data);
+
+    } catch (error) {
+      console.error(error);
+      setErrorUsers("Error al cargar usuarios");
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  useEffect(() => {
+    loadUsers();
+  }, [filterRole, filterStatus]);
+  
   return (
     <main className="min-h-screen bg-gray-50 text-gray-900">
       {/* HEADER */}
@@ -154,16 +184,26 @@ export default function AdminDashboard() {
               placeholder="Buscar usuarios..."
               className="border rounded-md px-3 py-1 w-full text-sm"
             />
-            <select className="border rounded-md px-2 py-1 text-sm">
-              <option>Todos los roles</option>
-              <option>Proveedor</option>
-              <option>Cliente</option>
+            <select
+              className="border rounded-md px-2 py-1 text-sm"
+              value={filterRole}
+              onChange={(e) => setFilterRole(e.target.value as UserRole)}
+            >
+              <option value="all">Todos los roles</option>
+              <option value="cliente">Cliente</option>
+              <option value="proveedor">Proveedor</option>
+              <option value="administrador">Administrador</option>
             </select>
-            <select className="border rounded-md px-2 py-1 text-sm">
-              <option>Todos los estados</option>
-              <option>Verificado</option>
-              <option>Pendiente</option>
-              <option>Bloqueado</option>
+
+            <select
+              className="border rounded-md px-2 py-1 text-sm"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value as UserStatus)}
+            >
+              <option value="all">Todos los estados</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="verificado">Verificado</option>
+              <option value="bloqueado">Bloqueado</option>
             </select>
           </div>
 
@@ -177,47 +217,53 @@ export default function AdminDashboard() {
                 <th>Acciones</th>
               </tr>
             </thead>
+
             <tbody>
-              {[
-                {
-                  name: "María González",
-                  email: "maria@email.com",
-                  rol: "Proveedor",
-                  estado: "Verificado",
-                  fecha: "15 Ene 2025",
-                },
-                {
-                  name: "Carlos Ruiz",
-                  email: "carlos@email.com",
-                  rol: "Cliente",
-                  estado: "Pendiente",
-                  fecha: "12 Ene 2025",
-                },
-                {
-                  name: "Ana López",
-                  email: "ana@email.com",
-                  rol: "Proveedor",
-                  estado: "Bloqueado",
-                  fecha: "08 Ene 2025",
-                },
-              ].map((u, i) => (
-                <tr key={i} className="border-b hover:bg-gray-50">
-                  <td className="py-2">
-                    <div>
-                      <p className="font-medium">{u.name}</p>
-                      <p className="text-gray-500 text-xs">{u.email}</p>
-                    </div>
-                  </td>
-                  <td className="text-center">{u.rol}</td>
-                  <td className="text-center">{u.estado}</td>
-                  <td className="text-center">{u.fecha}</td>
-                  <td className="flex gap-2 justify-center py-2 text-gray-600">
-                    <Edit className="w-4 h-4 cursor-pointer hover:text-pink-600" />
-                    <Check className="w-4 h-4 cursor-pointer hover:text-green-600" />
-                    <Lock className="w-4 h-4 cursor-pointer hover:text-gray-700" />
+              {loadingUsers && (
+                <tr>
+                  <td colSpan={5} className="text-center py-4 text-gray-500">
+                    Cargando usuarios...
                   </td>
                 </tr>
-              ))}
+              )}
+
+              {errorUsers && (
+                <tr>
+                  <td colSpan={5} className="text-center py-4 text-red-500">
+                    {errorUsers}
+                  </td>
+                </tr>
+              )}
+
+              {!loadingUsers && !errorUsers && users.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="text-center py-4 text-gray-500">
+                    No hay usuarios registrados
+                  </td>
+                </tr>
+              )}
+
+              {!loadingUsers &&
+                users.map((u, i) => (
+                  <tr key={i} className="border-b hover:bg-gray-50">
+                    <td className="py-2">
+                      <div>
+                        <p className="font-medium">{u.name}</p>
+                        <p className="text-gray-500 text-xs">{u.email}</p>
+                      </div>
+                    </td>
+                    <td className="text-center">{u.role}</td>
+                    <td className="text-center">{u.status}</td>
+                    <td className="text-center">
+                      {new Date(u.register_date || "").toLocaleDateString("es-MX")}
+                    </td>
+                    <td className="flex gap-2 justify-center py-2 text-gray-600">
+                      <Edit className="w-4 h-4 cursor-pointer hover:text-pink-600" />
+                      <Check className="w-4 h-4 cursor-pointer hover:text-green-600" />
+                      <Lock className="w-4 h-4 cursor-pointer hover:text-gray-700" />
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>

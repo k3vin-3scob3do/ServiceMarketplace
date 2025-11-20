@@ -9,8 +9,8 @@ def registerUser(user: User):
     return user_controller.registerUser(user)
 
 @router.get("/")
-def getUsers(role: UserRole = UserRole.CLIENT):
-    return user_controller.getUsers(role)
+def getUsers(role: UserRole = None, status: UserStatus = None):
+    return user_controller.getUsers(role, status)
 
 @router.get("/{userId}")
 def getUser(userId: str):

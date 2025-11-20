@@ -2,6 +2,7 @@ from models.user import User, UserRole, UserStatus
 from database import db
 from bson import ObjectId
 from utils import ResponseMessage
+from datetime import datetime
 
 collection = db['users']
 
@@ -10,6 +11,8 @@ def registerUser(user: User):
         exists = collection.find_one({'email': user.email})
         if exists:
             return ResponseMessage.message409
+        
+        user.register_date = datetime.now()
         
         result = collection.insert_one(user.model_dump())
 
@@ -21,12 +24,20 @@ def registerUser(user: User):
     except:
         return ResponseMessage.message500
 
-def getUsers(role: UserRole):
+def getUsers(role: UserRole, status: UserStatus):
     try:
+        query = {}
+
+        if role:
+            query["role"] = role
+        if status:
+            query["status"] = status
+
+        cursor = collection.find(query)
+
         users = []
-        cursor = collection.find({'role': role})
         for doc in cursor:
-            doc['_id'] = str(doc['_id'])
+            doc["_id"] = str(doc["_id"])
             users.append(doc)
 
         return {

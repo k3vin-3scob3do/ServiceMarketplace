@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { Search, User, Briefcase } from "lucide-react";
+import { LoginRequest } from "./models/user";
+import { login } from "@/services/authService";
 
 export default function HomePage() {
   const r = useRouter();
@@ -18,12 +20,16 @@ export default function HomePage() {
     setErr(null);
     setLoading(true);
     try {
-      const res = await api<{ access_token: string; token_type: string }>(
-        "/auth/login",
-        { method: "POST", body: JSON.stringify({ email, password }) }
-      );
-      localStorage.setItem("token", res.access_token); // TODO: pasar a cookie httpOnly
-      r.push("/services");
+      const loginData: LoginRequest = {
+        password: password,
+        email: email
+      };
+
+      const res = await login(loginData);  
+      console.log("Login", res);
+      if(res.intCode === 200) {
+        r.push("/services");
+      }
     } catch (e: any) {
       setErr(e.message);
     } finally {

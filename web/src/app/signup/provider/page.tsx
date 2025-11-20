@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { User, Mail, Lock, Phone, Briefcase, Type, Loader2 } from "lucide-react";
+import { UserModel, UserRole, UserStatus } from "@/app/models/user";
+import { registerUser } from "@/services/userService";
 
 export default function SignupProvider() {
   const r = useRouter();
@@ -10,10 +12,7 @@ export default function SignupProvider() {
     name: "",
     email: "",
     password: "",
-    phone: "",
-    brand: "",
-    category: "",
-    bio: "",
+    phone: ""
   });
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -22,14 +21,21 @@ export default function SignupProvider() {
     e.preventDefault();
     setErr(null);
     setLoading(true);
+
     try {
-      await api("/auth/register/provider", {
-        method: "POST",
-        body: JSON.stringify(form),
-      });
-      r.push("/#login");
-    } catch (e: any) {
-      setErr(e.message);
+      const userData: UserModel = {
+        ...form,
+        role: UserRole. PROVIDER,
+        status: UserStatus.PENDING
+      };
+
+      const res = await registerUser(userData);  
+      console.log("Registrado proveedor:", res);
+      if(res.intCode === 200){
+        r.push("/#login");
+      }
+    } catch (error: any) {
+      console.log("Error al registrarte");
     } finally {
       setLoading(false);
     }
@@ -87,7 +93,7 @@ export default function SignupProvider() {
         </div>
 
         {/* Marca */}
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium mb-1">Marca o empresa</label>
           <div className="flex items-center border rounded-lg px-3 py-2">
             <Briefcase className="w-4 h-4 text-gray-500 mr-2" />
@@ -98,10 +104,10 @@ export default function SignupProvider() {
               onChange={(e) => setForm({ ...form, brand: e.target.value })}
             />
           </div>
-        </div>
+        </div> */}
 
         {/* Categoría */}
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium mb-1">Categoría principal</label>
           <div className="flex items-center border rounded-lg px-3 py-2">
             <Type className="w-4 h-4 text-gray-500 mr-2" />
@@ -112,10 +118,10 @@ export default function SignupProvider() {
               onChange={(e) => setForm({ ...form, category: e.target.value })}
             />
           </div>
-        </div>
+        </div> */}
 
         {/* Bio */}
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium mb-1">Breve descripción</label>
           <textarea
             className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-pink-500 outline-none resize-none text-black placeholder-gray-400"
@@ -124,7 +130,7 @@ export default function SignupProvider() {
             value={form.bio}
             onChange={(e) => setForm({ ...form, bio: e.target.value })}
           />
-        </div>
+        </div> */}
 
         {/* Contraseña */}
         <div>

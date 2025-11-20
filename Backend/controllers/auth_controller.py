@@ -1,3 +1,4 @@
+from models.auth import LoginRequest
 from database import db
 from bson import ObjectId
 from utils import ResponseMessage
@@ -7,9 +8,9 @@ collection = db['users']
 
 SECRET_KEY = 'SECRET_KEY_SERVICE_MARKETPLACE'
 
-def login(email: str, password: str):
+def login(user: LoginRequest):
     try:
-        user = collection.find_one({'email': email, 'password': password})
+        user = collection.find_one({'email': user.email, 'password': user.password})
         if not user:
             return ResponseMessage.message404
         

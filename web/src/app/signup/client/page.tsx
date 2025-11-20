@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { User, Mail, Lock, Phone, Loader2 } from "lucide-react";
+import { registerUser } from "@/services/userService";
+import { UserModel, UserRole, UserStatus } from "@/app/models/user";
 
 export default function SignupClient() {
   const r = useRouter();
@@ -14,14 +16,21 @@ export default function SignupClient() {
     e.preventDefault();
     setErr(null);
     setLoading(true);
+
     try {
-      await api("/auth/register/client", {
-        method: "POST",
-        body: JSON.stringify(form),
-      });
-      r.push("/#login");
-    } catch (e: any) {
-      setErr(e.message);
+      const userData: UserModel = {
+        ...form,
+        role: UserRole.CLIENT,
+        status: UserStatus.PENDING
+      };
+
+      const res = await registerUser(userData);  
+      console.log("Registrado cliente:", res);
+      if(res.intCode === 200){
+        r.push("/#login");
+      }
+    } catch (error: any) {
+      console.log("Error al registrarte");
     } finally {
       setLoading(false);
     }

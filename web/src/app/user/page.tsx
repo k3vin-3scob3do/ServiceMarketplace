@@ -1,17 +1,58 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Briefcase, Bell, CheckCircle, Pencil, Lock, User } from "lucide-react";
+import { getUser, updateUser } from "@/services/userService";
+import { UserModel, UserRole, UserStatus } from "../models/user";
 
 export default function UserPanel() {
   const [editMode, setEditMode] = useState(false);
-  const [user, setUser] = useState({
-    name: "Ana García López",
-    email: "ana.garcia@email.com",
-    phone: "+34 666 123 456",
-    password: "********",
-    photo: "https://cdn-icons-png.flaticon.com/512/2922/2922506.png",
+  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState<UserModel>({
+    _id: "",
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+    role: UserRole.ALL,
+    status: UserStatus.ALL,
+    register_date: ""
   });
+
+
+  useEffect(() => {
+    loadUser();
+  }, []);
+
+  async function loadUser() {
+    try {
+      setLoading(true);
+
+      const res = await getUser("691d577eaf75255f0a7893bc");
+
+      if (res.intCode === 200) {
+        setUser(res.data);
+      }
+    } catch (error) {
+      console.log("Error al cargar usuario", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function saveUser() {
+    try {
+      const res = await updateUser(user._id ?? '', user);
+      console.log("Guardado:", res);
+
+      if (res.intCode === 200) {
+        alert("Usuario actualizado correctamente");
+      }
+    } catch (error) {
+      console.log("Error actualizando usuario", error);
+      alert("Error al guardar los cambios");
+    }
+  }
 
   const [services] = useState([
     {
@@ -114,7 +155,12 @@ export default function UserPanel() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Datos Personales</h2>
             <button
-              onClick={() => setEditMode((prev) => !prev)}
+              onClick={() => {
+                if (editMode) {
+                  saveUser(); // <-- Guardar usuario en BD
+                }
+                setEditMode(prev => !prev); // <-- Cambiar modo
+              }}
               className="flex items-center gap-2 bg-pink-600 text-white px-3 py-1.5 rounded hover:bg-pink-700 transition"
             >
               <Pencil className="w-4 h-4" />
@@ -123,7 +169,7 @@ export default function UserPanel() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div className="flex gap-4 items-center">
+            {/* <div className="flex gap-4 items-center">
               <Image
                 src={user.photo}
                 alt="Foto de perfil"
@@ -136,7 +182,7 @@ export default function UserPanel() {
               </button>
             </div>
 
-            <div></div>
+            <div></div> */}
 
             <Field
               label="Nombre completo"
@@ -152,7 +198,7 @@ export default function UserPanel() {
             />
             <Field
               label="Teléfono"
-              value={user.phone}
+              value={user.phone ?? ''}
               disabled={!editMode}
               onChange={(v) => setUser({ ...user, phone: v })}
             />
