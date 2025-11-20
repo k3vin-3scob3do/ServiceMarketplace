@@ -23,3 +23,8 @@ export const getServices = async (category?: ServiceCategory | null, status?: Se
   
   return response.data;
 };
+
+export const updateService = async (serviceId: string, service: Partial<ServiceModel>): Promise<ApiResponse<any>> => {
+  const response = await API.put(`/update/${serviceId}`, service);
+  return response.data;
+}

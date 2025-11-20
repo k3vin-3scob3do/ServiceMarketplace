@@ -6,15 +6,14 @@ import { api } from "@/lib/api";
 import toast from "react-hot-toast";
 
 interface LoginResponse {
-  intCode: number;
-  strMessage: string;
-  token: string;
-  data: {
-    _id: string;
-    role: string;
-    email: string;
-    name: string;
-  };
+  intCode?: number;
+  strMessage?: string;
+  token?: string;
+  detail?: string;
+  _id: string;
+  role: string;
+  email: string;
+  name: string;
 }
 
 export default function LoginPage() {
@@ -38,20 +37,21 @@ export default function LoginPage() {
 
       if (!res.ok) {
         const backendMsg =
-          (res.data as any)?.detail ||
-          (res.data as any)?.strMessage ||
+          res.data.detail ??
+          res.data.strMessage ??
           "Correo o contraseña incorrectos";
 
-        toast.error(backendMsg);
+        toast.error(String(backendMsg));
+
         return;
       }
 
       toast.success("Inicio de sesión exitoso");
 
-      localStorage.setItem("currentUser", JSON.stringify(res.data.data));
-      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("currentUser", JSON.stringify(res.data));
+      localStorage.setItem("token", res.data.token ?? "");
 
-      const role = res.data.data.role;
+      const role = res.data.role;
       if (role === "admin") router.push("/admin");
       else if (role === "provider") router.push("/provider");
       else router.push("/");
