@@ -29,8 +29,10 @@ export const getUser = async (userId: string): Promise<ApiResponse<UserModel>> =
   return response.data
 }
 
-export const updateUser = async (userId: string, user: UserModel): Promise<ApiResponse<any>> => {
-  const response = await API.put(`/update/${userId}`, user)
-  console.log("Response updateUser", response)
-  return response.data
-}
+export const updateUser = async (
+  userId: string,
+  updatedFields: Partial<UserModel>
+): Promise<ApiResponse<any>> => {
+  const response = await API.put(`/update/${userId}`, updatedFields);
+  return response.data;
+};

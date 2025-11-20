@@ -22,3 +22,12 @@ class User(BaseModel):
     role: UserRole = UserRole.CLIENT
     status: Optional[UserStatus] = UserStatus.PENDING
     register_date: Optional[datetime] = None
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[int] = None
+    password: Optional[str] = None
+    role: Optional[str] = None
+    status: Optional[str] = None
+

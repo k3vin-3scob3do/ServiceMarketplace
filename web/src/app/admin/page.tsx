@@ -17,8 +17,13 @@ import NewUserForm from "./new-user/page";
 import { UserModel, UserRole, UserStatus } from "../models/user";
 import { getUsers } from "@/services/userService";
 import { ApiResponse } from "@/app/models/response";
-import { ServiceCategory, ServiceModel, ServiceStatus } from "../models/service";
+import {
+  ServiceCategory,
+  ServiceModel,
+  ServiceStatus,
+} from "../models/service";
 import { getServices } from "@/services/servicesService";
+import { updateUser } from "@/services/userService";
 
 export default function AdminDashboard() {
   const [showUserModal, setShowUserModal] = useState(false);
@@ -30,19 +35,24 @@ export default function AdminDashboard() {
   const [errorServices, setErrorServices] = useState<string | null>(null);
   const [filterRole, setFilterRole] = useState<UserRole>(UserRole.ALL);
   const [filterStatus, setFilterStatus] = useState<UserStatus>(UserStatus.ALL);
-  const [filterCategory, setFilterCategory] = useState<ServiceCategory>(ServiceCategory.ALL);
-  const [filterStatusService, setFilterStatusService] = useState<ServiceStatus>(ServiceStatus.ALL);
+  const [filterCategory, setFilterCategory] = useState<ServiceCategory>(
+    ServiceCategory.ALL
+  );
+  const [filterStatusService, setFilterStatusService] = useState<ServiceStatus>(
+    ServiceStatus.ALL
+  );
+  const [editingUser, setEditingUser] = useState<UserModel | null>(null);
 
   const loadUsers = async () => {
     try {
       setLoadingUsers(true);
 
       const roleParam = filterRole !== UserRole.ALL ? filterRole : undefined;
-      const statusParam = filterStatus !== UserStatus.ALL ? filterStatus : undefined;
+      const statusParam =
+        filterStatus !== UserStatus.ALL ? filterStatus : undefined;
 
       const res = await getUsers(roleParam, statusParam);
       setUsers(res.data);
-
     } catch (error) {
       console.error(error);
       setErrorUsers("Error al cargar usuarios");
@@ -55,12 +65,15 @@ export default function AdminDashboard() {
     try {
       setLoadingServices(true);
 
-      const categoryParam = filterCategory !== ServiceCategory.ALL ? filterCategory : undefined;
-      const statusParam = filterStatusService !== ServiceStatus.ALL ? filterStatusService : undefined;
+      const categoryParam =
+        filterCategory !== ServiceCategory.ALL ? filterCategory : undefined;
+      const statusParam =
+        filterStatusService !== ServiceStatus.ALL
+          ? filterStatusService
+          : undefined;
 
       const res = await getServices(categoryParam, statusParam);
       setServices(res.data);
-
     } catch (error) {
       console.error(error);
       setErrorServices("Error al cargar servicios");
@@ -76,7 +89,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     loadServices();
   }, [filterCategory, filterStatusService]);
-  
+
   return (
     <main className="min-h-screen bg-gray-50 text-gray-900">
       {/* HEADER */}
@@ -284,12 +297,47 @@ export default function AdminDashboard() {
                     <td className="text-center">{u.role}</td>
                     <td className="text-center">{u.status}</td>
                     <td className="text-center">
-                      {new Date(u.register_date || "").toLocaleDateString("es-MX")}
+                      {new Date(u.register_date || "").toLocaleDateString(
+                        "es-MX"
+                      )}
                     </td>
                     <td className="flex gap-2 justify-center py-2 text-gray-600">
-                      <Edit className="w-4 h-4 cursor-pointer hover:text-pink-600" />
-                      <Check className="w-4 h-4 cursor-pointer hover:text-green-600" />
-                      <Lock className="w-4 h-4 cursor-pointer hover:text-gray-700" />
+                      <Edit
+                        className="w-4 h-4 cursor-pointer hover:text-pink-600"
+                        onClick={() => {
+                          setEditingUser(u); // seleccionas el usuario
+                          setShowUserModal(true); // abres el modal
+                        }}
+                      />
+
+                      <Check
+                        className="w-4 h-4 cursor-pointer hover:text-green-600"
+                        onClick={async () => {
+                          const res = await updateUser(u._id!, {
+                            status: "verificado",
+                          });
+                          if (res?.intCode === 200) {
+                            await loadUsers(); // <<--- refresca la tabla
+                          }
+                        }}
+                      />
+
+                      <Lock
+                        className="w-4 h-4 cursor-pointer hover:text-gray-700"
+                        onClick={async () => {
+                          const newStatus =
+                            u.status === "bloqueado"
+                              ? "verificado"
+                              : "bloqueado";
+
+                          const res = await updateUser(u._id!, {
+                            status: newStatus,
+                          });
+                          if (res?.intCode === 200) {
+                            await loadUsers(); // <<-- refresca tabla
+                          }
+                        }}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -309,7 +357,9 @@ export default function AdminDashboard() {
             <select
               className="border rounded-md px-2 py-1 text-sm"
               value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value as ServiceCategory)}
+              onChange={(e) =>
+                setFilterCategory(e.target.value as ServiceCategory)
+              }
             >
               <option value={ServiceCategory.ALL}>Todas las categorías</option>
 
@@ -326,7 +376,9 @@ export default function AdminDashboard() {
             <select
               className="border rounded-md px-2 py-1 text-sm"
               value={filterStatusService}
-              onChange={(e) => setFilterStatusService(e.target.value as ServiceStatus)}
+              onChange={(e) =>
+                setFilterStatusService(e.target.value as ServiceStatus)
+              }
             >
               <option value="all">Todos los estados</option>
               <option value="pendiente">Pendiente</option>
@@ -391,19 +443,13 @@ export default function AdminDashboard() {
                     </td>
 
                     {/* Categoría */}
-                    <td className="text-center">
-                      {s.category}
-                    </td>
+                    <td className="text-center">{s.category}</td>
 
                     {/* Estado */}
-                    <td className="text-center">
-                      {s.status}
-                    </td>
+                    <td className="text-center">{s.status}</td>
 
                     {/* Precio */}
-                    <td className="text-center">
-                      ${s.price}
-                    </td>
+                    <td className="text-center">${s.price}</td>
 
                     {/* Acciones */}
                     <td className="flex gap-2 justify-center py-2 text-gray-600">
@@ -426,7 +472,13 @@ export default function AdminDashboard() {
               onClick={(e) => e.stopPropagation()}
               className="relative bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg shadow-lg"
             >
-              <NewUserForm />
+              <NewUserForm
+                onClose={() => {
+                  setShowUserModal(false);
+                  setEditingUser(null); // limpia datos al cerrar
+                }}
+                user={editingUser} // <- si existe, es edición
+              />
             </div>
           </div>
         )}

@@ -2,39 +2,33 @@ export const API = process.env.NEXT_PUBLIC_API_URL!;
 
 type Opts = RequestInit & { authToken?: string };
 
-export async function api<T>(path: string, opts: Opts = {}) {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    ...(opts.headers as Record<string, string>) || {},
-  };
-
-  if (opts.authToken) {
-    headers["Authorization"] = `Bearer ${opts.authToken}`;
-  }
-
+export async function api<T = any>(
+  url: string,
+  options: RequestInit = {}
+) {
   try {
-    const res = await fetch(`${API}${path}`, { ...opts, headers });
+    const res = await fetch(`http://127.0.0.1:8000${url}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...(options.headers || {})
+      }
+    });
 
-    let data: any = {};
+    const data = await res.json().catch(() => ({}));
 
-    try {
-      data = await res.json();
-    } catch {
-      data = {};
-    }
-
+    // SI EL BACKEND RESPONDIÓ CON ERROR, LO PASAMOS TAL CUAL
     return {
       ok: res.ok,
       status: res.status,
-      data: data as T,
+      data: data,
     };
-  } catch (err: any) {
+  } catch (error: any) {
+    // ESTE CATCH SOLO OCURRE CUANDO FALLA LA RED
     return {
       ok: false,
       status: 500,
-      data: {
-        detail: err.message || "Error de conexión con el servidor",
-      } as T,
+      data: { detail: "Error de conexión con el servidor" },
     };
   }
 }

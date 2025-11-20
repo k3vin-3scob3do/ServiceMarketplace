@@ -66,27 +66,35 @@ def getUser(userId: str):
     except:
         return ResponseMessage.message500
 
-def updateUser(userId: str, user: User):
+def updateUser(userId: str, user):
     try:
         if not ObjectId.is_valid(userId):
             return ResponseMessage.message400
-        
+
         _user = collection.find_one({'_id': ObjectId(userId)})
         if not _user:
             return ResponseMessage.message404
-        
-        exists = collection.find_one({'email': user.email})
-        
-        if exists and str(exists['_id']) != userId:
-            return ResponseMessage.message409
-        
-        updated = collection.update_one({'_id': ObjectId(userId)}, {'$set': user.model_dump()})
+
+        payload = user.model_dump(exclude_unset=True)
+
+        # Evita colisión de email
+        if "email" in payload:
+            exists = collection.find_one({'email': payload["email"]})
+            if exists and str(exists['_id']) != userId:
+                return ResponseMessage.message409
+
+        updated = collection.update_one(
+            {'_id': ObjectId(userId)},
+            {'$set': payload}
+        )
+
         if updated.modified_count > 0:
             return ResponseMessage.message200
-        
+
         return ResponseMessage.message400
-        
-    except:
+
+    except Exception as e:
+        print("ERROR UPDATE USER:", e)
         return ResponseMessage.message500
 
 def deleteUser(userId: str):

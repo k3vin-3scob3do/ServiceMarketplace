@@ -16,10 +16,6 @@ def getServices(category: ServiceCategory = None, status: ServiceStatus = None, 
 def getService(serviceId: str):
     return service_controller.getService(serviceId)
 
-@router.put("/update/{serviceId}")
-def updateService(serviceId, service: Service):
-    return service_controller.updateService(serviceId, service)
-
 @router.delete("/delete/{serviceId}")
 def deleteService(serviceId: str):
     return service_controller.deleteService(serviceId)
