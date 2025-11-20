@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Upload, Plus, Save, Send } from "lucide-react";
+import { ServiceCategory } from "@/app/models/service";
 
 export default function NewServiceForm() {
   const [images, setImages] = useState<File[]>([]);
@@ -49,11 +50,12 @@ export default function NewServiceForm() {
         </label>
         <select className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-pink-500 outline-none">
           <option value="">Selecciona una categoría</option>
-          <option value="diseño">Diseño Gráfico</option>
-          <option value="web">Desarrollo Web</option>
-          <option value="marketing">Marketing Digital</option>
-          <option value="fotografia">Fotografía</option>
-          <option value="consultoria">Consultoría</option>
+
+          {Object.values(ServiceCategory).map((cat) => (
+            <option key={cat} value={cat}>
+              {cat.charAt(0).toUpperCase() + cat.slice(1)}
+            </option>
+          ))}
         </select>
       </div>
 

@@ -16,7 +16,7 @@ import { useEffect, useState } from "react";
 import NewUserForm from "./new-user/page";
 import { UserModel, UserRole, UserStatus } from "../models/user";
 import { getUsers } from "@/services/userService";
-import { ApiResponse } from "@/services/response";
+import { ApiResponse } from "@/app/models/response";
 
 export default function AdminDashboard() {
   const [showUserModal, setShowUserModal] = useState(false);

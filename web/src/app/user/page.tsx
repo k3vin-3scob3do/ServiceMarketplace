@@ -27,8 +27,8 @@ export default function UserPanel() {
   async function loadUser() {
     try {
       setLoading(true);
-
-      const res = await getUser("691d577eaf75255f0a7893bc");
+      const user = await JSON.parse(localStorage.getItem("currentUser") ?? "{}");
+      const res = await getUser(user._id);
 
       if (res.intCode === 200) {
         setUser(res.data);

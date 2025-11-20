@@ -1,6 +1,6 @@
 import { UserModel, UserRole, UserStatus } from "@/app/models/user";
 import axios from "axios";
-import { ApiResponse } from "./response";
+import { ApiResponse } from "../app/models/response";
 
 const API = axios.create({
   baseURL: "http://127.0.0.1:8000/user", // URL del backend

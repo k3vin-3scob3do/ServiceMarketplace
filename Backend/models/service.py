@@ -27,6 +27,7 @@ class Service(BaseModel):
     description: str
     price: float
     status: ServiceStatus = ServiceStatus.PENDING
+    images: Optional[list[str]]
     
     
     

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { Search, User, Briefcase } from "lucide-react";
-import { LoginRequest } from "./models/user";
+import { LoginRequest, UserModel } from "./models/user";
 import { login } from "@/services/authService";
 
 export default function HomePage() {
@@ -28,6 +28,8 @@ export default function HomePage() {
       const res = await login(loginData);  
       console.log("Login", res);
       if(res.intCode === 200) {
+        const user: UserModel = res.data
+        localStorage.setItem("currentUser", JSON.stringify(user));
         r.push("/services");
       }
     } catch (e: any) {
