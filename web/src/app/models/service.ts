@@ -14,7 +14,7 @@ export interface ServiceModel {
 export enum ServiceStatus {
     ALL = 'all',
     PENDING = 'pendiente',
-    APPROVED = 'aprovado',
+    APPROVED = 'aprobado',
     REJECTED = 'rechazado'
 }
 

@@ -1,8 +1,12 @@
 from fastapi import APIRouter, HTTPException
 from models.service import Service, ServiceCategory, ServiceStatus
 from controllers import service_controller
+from pydantic import BaseModel
 
 router = APIRouter(prefix = "/service", tags = ["Service"])
+
+class StatusUpdate(BaseModel):
+    status: ServiceStatus
 
 @router.post("/register")
 def registerService(service: Service):
@@ -21,8 +25,12 @@ def deleteService(serviceId: str):
     return service_controller.deleteService(serviceId)
 
 @router.post("/status/{serviceId}")
-def updateStatus(serviceId: str, status: ServiceStatus):
-    return service_controller.updateStatus(serviceId, status)
+def updateStatus(serviceId: str, data: StatusUpdate):
+    return service_controller.updateStatus(serviceId, data.status)
+
+@router.put("/update/{serviceId}")
+def updateService(serviceId: str, service: Service):
+    return service_controller.updateService(serviceId, service)
 
 # @router.get("/details")
 # def getDetails():

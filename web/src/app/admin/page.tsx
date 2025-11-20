@@ -1,9 +1,9 @@
 "use client";
+
 import {
   Users,
   Briefcase,
   Handshake,
-  TrendingUp,
   Lock,
   Edit,
   UserPlus,
@@ -11,38 +11,53 @@ import {
   X,
   Check,
 } from "lucide-react";
+
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import NewUserForm from "./new-user/page";
+
 import { UserModel, UserRole, UserStatus } from "../models/user";
-import { getUsers } from "@/services/userService";
-import { ApiResponse } from "@/app/models/response";
+import { getUsers, updateUser } from "@/services/userService";
+
 import {
   ServiceCategory,
   ServiceModel,
   ServiceStatus,
 } from "../models/service";
-import { getServices } from "@/services/servicesService";
-import { updateUser } from "@/services/userService";
+
+import { getServices, updateService, updateServiceStatus } from "@/services/servicesService";
+
+import toast from "react-hot-toast";
 
 export default function AdminDashboard() {
   const [showUserModal, setShowUserModal] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserModel | null>(null);
+
   const [users, setUsers] = useState<UserModel[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
+  const [errorUsers, setErrorUsers] = useState<string | null>(null);
+
   const [services, setServices] = useState<ServiceModel[]>([]);
   const [loadingServices, setLoadingServices] = useState(true);
-  const [errorUsers, setErrorUsers] = useState<string | null>(null);
   const [errorServices, setErrorServices] = useState<string | null>(null);
+
   const [filterRole, setFilterRole] = useState<UserRole>(UserRole.ALL);
   const [filterStatus, setFilterStatus] = useState<UserStatus>(UserStatus.ALL);
+
   const [filterCategory, setFilterCategory] = useState<ServiceCategory>(
     ServiceCategory.ALL
   );
   const [filterStatusService, setFilterStatusService] = useState<ServiceStatus>(
     ServiceStatus.ALL
   );
-  const [editingUser, setEditingUser] = useState<UserModel | null>(null);
 
+  const [selectedService, setSelectedService] = useState<ServiceModel | null>(
+    null
+  );
+
+  // ---------------------------------------------------
+  // CARGAR USUARIOS
+  // ---------------------------------------------------
   const loadUsers = async () => {
     try {
       setLoadingUsers(true);
@@ -61,6 +76,9 @@ export default function AdminDashboard() {
     }
   };
 
+  // ---------------------------------------------------
+  // CARGAR SERVICIOS
+  // ---------------------------------------------------
   const loadServices = async () => {
     try {
       setLoadingServices(true);
@@ -82,6 +100,7 @@ export default function AdminDashboard() {
     }
   };
 
+
   useEffect(() => {
     loadUsers();
   }, [filterRole, filterStatus]);
@@ -99,133 +118,40 @@ export default function AdminDashboard() {
             <Briefcase className="w-5 h-5 text-pink-600" />
             ++Servicios
           </div>
+
           <h1 className="text-xl font-semibold">Panel de Administrador</h1>
-          <div className="flex gap-3 items-center">
-            <Users className="w-6 h-6 text-gray-700" />
-          </div>
+
+          <Users className="w-6 h-6 text-gray-700" />
         </nav>
       </header>
 
       <section className="max-w-7xl mx-auto px-6 py-10 space-y-10">
-        {/* MÉTRICAS PRINCIPALES */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <StatCard
-            title="Total Contrataciones"
-            value="2,847"
-            icon={<Handshake className="w-6 h-6 text-gray-600" />}
-            change="+12.5%"
-          />
-          <StatCard
-            title="Servicios Publicados"
-            value="1,234"
-            icon={<Briefcase className="w-6 h-6 text-gray-600" />}
-            change="-8.3%"
-          />
-          <StatCard
-            title="Usuarios Registrados"
-            value="5,692"
-            icon={<Users className="w-6 h-6 text-gray-600" />}
-            change="-2.1%"
-          />
-        </div>
-
-        {/* SERVICIOS Y PROVEEDORES DESTACADOS */}
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-lg shadow p-5">
-            <h3 className="font-semibold mb-4">Servicios Más Contratados</h3>
-            {[
-              { name: "Desarrollo Web", count: 456 },
-              { name: "Diseño Gráfico", count: 389 },
-              { name: "Marketing Digital", count: 312 },
-              { name: "Consultoría", count: 234 },
-              { name: "Fotografía", count: 178 },
-            ].map((s, i) => (
-              <div key={i} className="mb-3">
-                <div className="flex justify-between text-sm">
-                  <span>{s.name}</span>
-                  <span className="font-medium">{s.count}</span>
-                </div>
-                <div className="bg-gray-200 rounded-full h-2 mt-1">
-                  <div
-                    className="bg-pink-600 h-2 rounded-full"
-                    style={{ width: `${(s.count / 456) * 100}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-5">
-            <h3 className="font-semibold mb-4">Top Proveedores</h3>
-            {[
-              {
-                rank: 1,
-                name: "María González",
-                category: "Desarrollo Web",
-                contracts: 89,
-                change: "+15%",
-              },
-              {
-                rank: 2,
-                name: "Carlos Ruiz",
-                category: "Diseño Gráfico",
-                contracts: 76,
-                change: "+8%",
-              },
-              {
-                rank: 3,
-                name: "Ana López",
-                category: "Marketing Digital",
-                contracts: 64,
-                change: "-3%",
-              },
-            ].map((p, i) => (
-              <div
-                key={i}
-                className="flex items-center justify-between py-2 border-b last:border-0"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="text-lg font-bold text-gray-700">
-                    {p.rank}
-                  </div>
-                  <div>
-                    <p className="font-medium">{p.name}</p>
-                    <p className="text-sm text-gray-500">{p.category}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold">{p.contracts} contratos</p>
-                  <p className="text-xs text-gray-500">{p.change}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* GESTIÓN DE USUARIOS */}
+        {/* ---------------------------------------------------
+          GESTIÓN DE USUARIOS
+        --------------------------------------------------- */}
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex justify-between items-center mb-4">
             <div>
               <h3 className="text-lg font-semibold">Gestión de Usuarios</h3>
               <p className="text-sm text-gray-600">
-                Administra usuarios, roles y permisos de la plataforma
+                Administra usuarios, roles y permisos
               </p>
             </div>
+
             <button
-              onClick={() => setShowUserModal(true)}
-              className="flex items-center gap-2 bg-pink-600 text-white px-3 py-1.5 rounded hover:bg-pink-700 text-sm"
+              onClick={() => {
+                setEditingUser(null);
+                setShowUserModal(true);
+              }}
+              className="bg-pink-600 text-white px-3 py-1.5 rounded flex items-center gap-2 text-sm hover:bg-pink-700"
             >
               <UserPlus className="w-4 h-4" />
               Nuevo Usuario
             </button>
           </div>
 
+          {/* FILTROS */}
           <div className="flex gap-3 mb-4">
-            <input
-              type="text"
-              placeholder="Buscar usuarios..."
-              className="border rounded-md px-3 py-1 w-full text-sm"
-            />
             <select
               className="border rounded-md px-2 py-1 text-sm"
               value={filterRole}
@@ -249,6 +175,7 @@ export default function AdminDashboard() {
             </select>
           </div>
 
+          {/* TABLA DE USUARIOS */}
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="border-b text-gray-600">
@@ -256,7 +183,7 @@ export default function AdminDashboard() {
                 <th>Rol</th>
                 <th>Estado</th>
                 <th>Registro</th>
-                <th>Acciones</th>
+                <th className="text-center">Acciones</th>
               </tr>
             </thead>
 
@@ -269,59 +196,45 @@ export default function AdminDashboard() {
                 </tr>
               )}
 
-              {errorUsers && (
-                <tr>
-                  <td colSpan={5} className="text-center py-4 text-red-500">
-                    {errorUsers}
-                  </td>
-                </tr>
-              )}
-
-              {!loadingUsers && !errorUsers && users.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="text-center py-4 text-gray-500">
-                    No hay usuarios registrados
-                  </td>
-                </tr>
-              )}
-
               {!loadingUsers &&
                 users.map((u, i) => (
                   <tr key={i} className="border-b hover:bg-gray-50">
                     <td className="py-2">
-                      <div>
-                        <p className="font-medium">{u.name}</p>
-                        <p className="text-gray-500 text-xs">{u.email}</p>
-                      </div>
+                      <p className="font-medium">{u.name}</p>
+                      <p className="text-xs text-gray-500">{u.email}</p>
                     </td>
+
                     <td className="text-center">{u.role}</td>
                     <td className="text-center">{u.status}</td>
+
                     <td className="text-center">
                       {new Date(u.register_date || "").toLocaleDateString(
                         "es-MX"
                       )}
                     </td>
+
                     <td className="flex gap-2 justify-center py-2 text-gray-600">
+                      {/* EDITAR USUARIO */}
                       <Edit
                         className="w-4 h-4 cursor-pointer hover:text-pink-600"
                         onClick={() => {
-                          setEditingUser(u); // seleccionas el usuario
-                          setShowUserModal(true); // abres el modal
+                          setEditingUser(u);
+                          setShowUserModal(true);
                         }}
                       />
 
+                      {/* VERIFICAR */}
                       <Check
                         className="w-4 h-4 cursor-pointer hover:text-green-600"
                         onClick={async () => {
                           const res = await updateUser(u._id!, {
                             status: "verificado",
                           });
-                          if (res?.intCode === 200) {
-                            await loadUsers(); // <<--- refresca la tabla
-                          }
+                          if (res?.intCode === 200) loadUsers();
                         }}
                       />
 
+                      {/* BLOQUEAR / DESBLOQUEAR */}
                       <Lock
                         className="w-4 h-4 cursor-pointer hover:text-gray-700"
                         onClick={async () => {
@@ -333,9 +246,7 @@ export default function AdminDashboard() {
                           const res = await updateUser(u._id!, {
                             status: newStatus,
                           });
-                          if (res?.intCode === 200) {
-                            await loadUsers(); // <<-- refresca tabla
-                          }
+                          if (res?.intCode === 200) loadUsers();
                         }}
                       />
                     </td>
@@ -345,15 +256,14 @@ export default function AdminDashboard() {
           </table>
         </div>
 
-        {/* GESTIÓN DE SERVICIOS */}
+        {/* ---------------------------------------------------
+          GESTIÓN DE SERVICIOS
+        --------------------------------------------------- */}
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-lg font-semibold mb-3">Gestión de Servicios</h3>
+
+          {/* FILTROS */}
           <div className="flex gap-3 mb-4">
-            <input
-              type="text"
-              placeholder="Buscar servicios..."
-              className="border rounded-md px-3 py-1 w-full text-sm"
-            />
             <select
               className="border rounded-md px-2 py-1 text-sm"
               value={filterCategory}
@@ -361,18 +271,18 @@ export default function AdminDashboard() {
                 setFilterCategory(e.target.value as ServiceCategory)
               }
             >
-              <option value={ServiceCategory.ALL}>Todas las categorías</option>
-
-              <option value={ServiceCategory.TECHNOLOGY}>Tecnología</option>
-              <option value={ServiceCategory.EDUCATION}>Educación</option>
-              <option value={ServiceCategory.HEALTH}>Salud</option>
-              <option value={ServiceCategory.HOME}>Hogar</option>
-              <option value={ServiceCategory.BUSINESS}>Negocios</option>
-              <option value={ServiceCategory.TRANSPORT}>Transporte</option>
-              <option value={ServiceCategory.CREATIVE}>Creatividad</option>
-              <option value={ServiceCategory.MARKETING}>Marketing</option>
-              <option value={ServiceCategory.OTHER}>Otro</option>
+              <option value="all">Todas las categorías</option>
+              <option value="tecnologia">Tecnología</option>
+              <option value="educacion">Educación</option>
+              <option value="salud">Salud</option>
+              <option value="hogar">Hogar</option>
+              <option value="negocios">Negocios</option>
+              <option value="transporte">Transporte</option>
+              <option value="creatividad">Creatividad</option>
+              <option value="marketing">Marketing</option>
+              <option value="otro">Otro</option>
             </select>
+
             <select
               className="border rounded-md px-2 py-1 text-sm"
               value={filterStatusService}
@@ -380,13 +290,14 @@ export default function AdminDashboard() {
                 setFilterStatusService(e.target.value as ServiceStatus)
               }
             >
-              <option value="all">Todos los estados</option>
+              <option value="all">Todos</option>
               <option value="pendiente">Pendiente</option>
-              <option value="aprovado">Aprobado</option>
+              <option value="aprobado">Aprobado</option>
               <option value="rechazado">Rechazado</option>
             </select>
           </div>
 
+          {/* TABLA DE SERVICIOS */}
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="border-b text-gray-600">
@@ -395,7 +306,7 @@ export default function AdminDashboard() {
                 <th>Categoría</th>
                 <th>Estado</th>
                 <th>Precio</th>
-                <th>Acciones</th>
+                <th className="text-center">Acciones</th>
               </tr>
             </thead>
 
@@ -408,76 +319,121 @@ export default function AdminDashboard() {
                 </tr>
               )}
 
-              {errorServices && (
-                <tr>
-                  <td colSpan={6} className="text-center py-4 text-red-500">
-                    {errorServices}
-                  </td>
-                </tr>
-              )}
-
-              {!loadingServices && !errorServices && services.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="text-center py-4 text-gray-500">
-                    No hay servicios registrados
-                  </td>
-                </tr>
-              )}
-
               {!loadingServices &&
                 services.map((s) => (
                   <tr key={s._id} className="border-b hover:bg-gray-50">
-                    {/* Servicio */}
-                    <td className="py-1">
-                      <div>
-                        <p className="font-medium">{s.name}</p>
-                        <p className="text-gray-500 text-xs">
-                          {s.provider_email}
-                        </p>
-                      </div>
+                    <td className="py-2">
+                      <p className="font-medium">{s.name}</p>
+                      <p className="text-xs text-gray-500">
+                        {s.provider_email}
+                      </p>
                     </td>
 
-                    {/* Proveedor */}
                     <td className="text-center">
                       {s.provider_name ?? "Sin proveedor"}
                     </td>
 
-                    {/* Categoría */}
                     <td className="text-center">{s.category}</td>
-
-                    {/* Estado */}
                     <td className="text-center">{s.status}</td>
-
-                    {/* Precio */}
                     <td className="text-center">${s.price}</td>
 
-                    {/* Acciones */}
                     <td className="flex gap-2 justify-center py-2 text-gray-600">
-                      <Edit className="w-4 h-4 cursor-pointer hover:text-pink-600" />
-                      <Check className="w-4 h-4 cursor-pointer hover:text-green-600" />
-                      <X className="w-4 h-4 cursor-pointer hover:text-red-600" />
-                      <Eye className="w-4 h-4 cursor-pointer hover:text-blue-600" />
+                      {/* APROBAR */}
+                      <Check
+                        className="w-4 h-4 cursor-pointer hover:text-green-600"
+                        onClick={() =>
+                          updateServiceStatus(s._id!, ServiceStatus.APPROVED)
+                        }
+                      />
+
+                      <X
+                        className="w-4 h-4 cursor-pointer hover:text-red-600"
+                        onClick={() =>
+                          updateServiceStatus(s._id!, ServiceStatus.REJECTED)
+                        }
+                      />
+
+                      {/* VER DETALLES */}
+                      <Eye
+                        className="w-4 h-4 cursor-pointer hover:text-blue-600"
+                        onClick={() => setSelectedService(s)}
+                      />
                     </td>
                   </tr>
                 ))}
             </tbody>
           </table>
         </div>
+
+        {/* MODAL: DETALLES DE SERVICIO */}
+        {selectedService && (
+          <div
+            className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+            onClick={() => setSelectedService(null)}
+          >
+            <div
+              className="bg-white rounded-lg p-6 w-full max-w-lg shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className="text-xl font-bold mb-3">{selectedService.name}</h2>
+
+              {selectedService.images?.length ? (
+                <Image
+                  src={selectedService.images[0]}
+                  alt="img"
+                  width={500}
+                  height={300}
+                  className="rounded-lg mb-3"
+                />
+              ) : (
+                <div className="w-full h-48 bg-gray-200 rounded mb-3 flex items-center justify-center text-gray-500">
+                  Sin imagen
+                </div>
+              )}
+
+              <p className="text-sm">
+                <strong>Categoría:</strong> {selectedService.category}
+              </p>
+              <p className="text-sm">
+                <strong>Proveedor:</strong> {selectedService.provider_name}
+              </p>
+              <p className="text-sm">
+                <strong>Email:</strong> {selectedService.provider_email}
+              </p>
+              <p className="text-sm mb-3">
+                <strong>Descripción:</strong> {selectedService.description}
+              </p>
+
+              <button
+                onClick={() => setSelectedService(null)}
+                className="w-full bg-pink-600 text-white py-2 rounded hover:bg-pink-700"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL: CREAR / EDITAR USUARIO */}
         {showUserModal && (
           <div
             className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
-            onClick={() => setShowUserModal(false)}
+            onClick={() => {
+              setShowUserModal(false);
+              setEditingUser(null);
+            }}
           >
             <div
+              className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg shadow-lg"
               onClick={(e) => e.stopPropagation()}
-              className="relative bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg shadow-lg"
             >
               <NewUserForm
+                user={editingUser}
                 onClose={() => {
                   setShowUserModal(false);
-                  setEditingUser(null); // limpia datos al cerrar
+                  setEditingUser(null);
+                  loadUsers();
                 }}
-                user={editingUser} // <- si existe, es edición
               />
             </div>
           </div>
@@ -487,12 +443,17 @@ export default function AdminDashboard() {
   );
 }
 
+// ---------------------------------------------------
+// COMPONENTE PARA ESTADÍSTICAS
+// ---------------------------------------------------
+
 function StatCard({ title, value, icon, change }: any) {
   return (
     <div className="bg-white shadow rounded-lg p-5 flex items-center justify-between">
       <div>
         <p className="text-sm text-gray-600">{title}</p>
         <h2 className="text-2xl font-bold mt-1">{value}</h2>
+
         <p
           className={`text-sm ${
             change.startsWith("-") ? "text-red-500" : "text-green-600"
@@ -501,6 +462,7 @@ function StatCard({ title, value, icon, change }: any) {
           {change}
         </p>
       </div>
+
       <div className="text-gray-600">{icon}</div>
     </div>
   );

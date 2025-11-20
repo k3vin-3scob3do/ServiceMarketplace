@@ -28,3 +28,8 @@ export const updateService = async (serviceId: string, service: Partial<ServiceM
   const response = await API.put(`/update/${serviceId}`, service);
   return response.data;
 }
+
+export async function updateServiceStatus(serviceId: string, status: ServiceStatus) {
+  return API.post(`/status/${serviceId}`, { status });
+}
+

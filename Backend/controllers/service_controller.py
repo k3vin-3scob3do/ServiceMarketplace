@@ -79,17 +79,23 @@ def updateService(serviceId: str, service: Service):
         _service = db['services'].find_one({'_id': ObjectId(serviceId)})
         if not _service:
             return ResponseMessage.message404
+
+        # Si el modelo trae provider_id vacío, mantenemos el existente
+        service_data = service.model_dump(exclude_none=True)
+        service_data["provider_id"] = _service["provider_id"]
+
+        updated = db['services'].update_one(
+            {"_id": ObjectId(serviceId)},
+            {"$set": service_data}
+        )
+
+        if updated.modified_count > 0:
+            return ResponseMessage.message200
         
-        provider_id = _service.get('provider_id')
-        contract = db['contracts'].find_one({'provider_id': provider_id})
-        if not contract:
-            updated = db['services'].update_one({'_id': ObjectId(serviceId)}, {'$set': service.model_dump()})
-            if updated.modified_count > 0:
-                return ResponseMessage.message200
-        
-        return ResponseMessage.message401 
-        
-    except:
+        return ResponseMessage.message400
+
+    except Exception as e:
+        print("ERROR UPDATE SERVICE:", e)
         return ResponseMessage.message500
 
 def deleteService(serviceId):
@@ -128,5 +134,3 @@ def updateStatus(serviceId: str, status: ServiceStatus):
         
     except:
         return ResponseMessage.message500
-            
-    

@@ -14,9 +14,9 @@ class ServiceCategory(str, Enum):
     OTHER = 'otro'
 
 class ServiceStatus(str, Enum):
-    PENDING = 'pendiente'
-    APPROVED = 'aprovado'
-    REJECTED = 'rechazado'
+    PENDING = "pendiente"
+    APPROVED = "aprobado"
+    REJECTED = "rechazado"
 
 class Service(BaseModel):
     _id: Optional[str] = None

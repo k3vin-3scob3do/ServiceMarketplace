@@ -12,6 +12,9 @@ const nextConfig: NextConfig = {
       "i.pinimg.com",
       "cdn-media-1.freecodecamp.org",
       "placehold.co",
+      "fake-storage.com",
+      "localhost",
+      "127.0.0.1"
     ],
   },
 };
