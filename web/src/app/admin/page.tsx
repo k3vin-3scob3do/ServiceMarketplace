@@ -25,7 +25,11 @@ import {
   ServiceStatus,
 } from "../models/service";
 
-import { getServices, updateService, updateServiceStatus } from "@/services/servicesService";
+import {
+  getServices,
+  updateService,
+  updateServiceStatus,
+} from "@/services/servicesService";
 
 import toast from "react-hot-toast";
 
@@ -99,7 +103,6 @@ export default function AdminDashboard() {
       setLoadingServices(false);
     }
   };
-
 
   useEffect(() => {
     loadUsers();
@@ -341,16 +344,29 @@ export default function AdminDashboard() {
                       {/* APROBAR */}
                       <Check
                         className="w-4 h-4 cursor-pointer hover:text-green-600"
-                        onClick={() =>
-                          updateServiceStatus(s._id!, ServiceStatus.APPROVED)
-                        }
+                        onClick={async () => {
+                          const res = await updateServiceStatus(
+                            s._id!,
+                            ServiceStatus.APPROVED
+                          );
+                          if (res?.data?.intCode === 200) {
+                            toast.success("Servicio aprobado");
+                            loadServices(); // <-- AQUÍ REFRESCA
+                          }
+                        }}
                       />
-
                       <X
                         className="w-4 h-4 cursor-pointer hover:text-red-600"
-                        onClick={() =>
-                          updateServiceStatus(s._id!, ServiceStatus.REJECTED)
-                        }
+                        onClick={async () => {
+                          const res = await updateServiceStatus(
+                            s._id!,
+                            ServiceStatus.REJECTED
+                          );
+                          if (res?.data?.intCode === 200) {
+                            toast.success("Servicio rechazado");
+                            loadServices(); // <-- AQUÍ TAMBIÉN REFRESCA
+                          }
+                        }}
                       />
 
                       {/* VER DETALLES */}
