@@ -12,8 +12,29 @@ export async function api<T>(path: string, opts: Opts = {}) {
     headers["Authorization"] = `Bearer ${opts.authToken}`;
   }
 
-  const res = await fetch(`${API}${path}`, { ...opts, headers });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || "Error en la solicitud");
-  return data as T;
+  try {
+    const res = await fetch(`${API}${path}`, { ...opts, headers });
+
+    let data: any = {};
+
+    try {
+      data = await res.json();
+    } catch {
+      data = {};
+    }
+
+    return {
+      ok: res.ok,
+      status: res.status,
+      data: data as T,
+    };
+  } catch (err: any) {
+    return {
+      ok: false,
+      status: 500,
+      data: {
+        detail: err.message || "Error de conexión con el servidor",
+      } as T,
+    };
+  }
 }

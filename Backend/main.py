@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from routes import auth, user, service, review, contract
 from fastapi.middleware.cors import CORSMiddleware
 
-
 app = FastAPI()
 
 origins = [
@@ -18,6 +17,7 @@ app.add_middleware(
     allow_headers=["*"],  
 )
 
+# Routers correctos
 app.include_router(auth.router)
 app.include_router(user.router)
 app.include_router(service.router)

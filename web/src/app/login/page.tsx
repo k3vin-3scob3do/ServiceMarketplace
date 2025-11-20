@@ -3,6 +3,19 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import toast from "react-hot-toast";
+
+interface LoginResponse {
+  intCode: number;
+  strMessage: string;
+  token: string;
+  data: {
+    _id: string;
+    role: string;
+    email: string;
+    name: string;
+  };
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,30 +27,57 @@ export default function LoginPage() {
     e.preventDefault();
     setErr(null);
     setLoading(true);
+
     try {
-      const res = await api("/auth/login", {
+      const res = await api<LoginResponse>("/auth/login", {
         method: "POST",
         body: JSON.stringify(form),
-      }) as { role?: string | null };
+      });
 
-      // Ejemplo: redirigir según el rol del usuario
-      const role = res?.role;
+      console.log("Backend detail:", res.data);
+
+      if (!res.ok) {
+        const backendMsg =
+          (res.data as any)?.detail ||
+          (res.data as any)?.strMessage ||
+          "Correo o contraseña incorrectos";
+
+        toast.error(backendMsg);
+        return;
+      }
+
+      toast.success("Inicio de sesión exitoso");
+
+      localStorage.setItem("currentUser", JSON.stringify(res.data.data));
+      localStorage.setItem("token", res.data.token);
+
+      const role = res.data.data.role;
       if (role === "admin") router.push("/admin");
       else if (role === "provider") router.push("/provider");
       else router.push("/");
+    } catch (err: any) {
+      console.log("ERROR CATCH:", err);
 
-    } catch (e: any) {
-      setErr(e.message || "Credenciales incorrectas");
-    } finally {
-      setLoading(false);
+      const backendMsg =
+        (err?.data as any)?.detail ||
+        (err?.data as any)?.strMessage ||
+        err?.message ||
+        "Error al iniciar sesión";
+
+      toast.error(backendMsg);
     }
   }
 
   return (
     <main className="mx-auto max-w-md p-6">
-      <h1 className="text-2xl font-semibold mb-6 text-center">Iniciar Sesión</h1>
+      <h1 className="text-2xl font-semibold mb-6 text-center">
+        Iniciar Sesión
+      </h1>
 
-      <form onSubmit={submit} className="border rounded-xl p-6 space-y-3 shadow-sm bg-white">
+      <form
+        onSubmit={submit}
+        className="border rounded-xl p-6 space-y-3 shadow-sm bg-white"
+      >
         <input
           className="w-full border rounded px-3 py-2 text-black focus:ring-2 focus:ring-pink-500 outline-none"
           placeholder="Correo electrónico"
@@ -45,6 +85,7 @@ export default function LoginPage() {
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
         />
+
         <input
           className="w-full border rounded px-3 py-2 text-black focus:ring-2 focus:ring-pink-500 outline-none"
           placeholder="Contraseña"
