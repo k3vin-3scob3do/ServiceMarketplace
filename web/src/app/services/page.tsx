@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { StarIcon as SolidStar } from "@heroicons/react/24/solid";
 import { StarIcon as OutlineStar } from "@heroicons/react/24/outline";
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { ServiceModel, ServiceStatus } from "../models/service";
 import { getServices } from "@/services/servicesService";
 import { requestContract } from "@/services/contractService";
@@ -66,14 +67,11 @@ export default function ServicesPage() {
   const [newReview, setNewReview] = useState("");
   const [newRating, setNewRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
-  // const [currentReviews, setCurrentReviews] = useState<Review[]>([]);
 
   const loadServices = async () => {
     try {
       const user = JSON.parse(localStorage.getItem("currentUser") ?? "{}");
-
       setLoadingServices(true);
-
       const res = await getServices(null, ServiceStatus.APPROVED, null);
       setServices(res.data);
     } catch (error) {
@@ -104,20 +102,33 @@ export default function ServicesPage() {
     }
   };
 
+  // Navegación del carrusel
+  const nextImage = () => {
+    const images = selected?.images;
+    if (images && images.length > 1) {
+      setSelectedImageIndex((prev) =>
+        prev === images.length - 1 ? 0 : prev + 1
+      );
+    }
+  };
+
+  const prevImage = () => {
+    const images = selected?.images;
+    if (images && images.length > 1) {
+      setSelectedImageIndex((prev) =>
+        prev === 0 ? images.length - 1 : prev - 1
+      );
+    }
+  };
+
+  // Resetear índice de imagen cuando cambia el servicio seleccionado
+  useEffect(() => {
+    setSelectedImageIndex(0);
+  }, [selected]);
+
   useEffect(() => {
     loadServices();
   }, []);
-
-  // Actualiza reseñas al cambiar de servicio
-  // useEffect(() => {
-  //   if (selected) setCurrentReviews(selected.reviews);
-  // }, [selected]);
-
-  // Calcular promedio actual del servicio seleccionado
-  // const averageRating =
-  //   currentReviews.length > 0
-  //     ? currentReviews.reduce((acc, r) => acc + r.rating, 0) / currentReviews.length
-  //     : 0;
 
   return (
     <main className="bg-gray-50 min-h-screen text-gray-900">
@@ -129,21 +140,18 @@ export default function ServicesPage() {
         {/* GRID DE SERVICIOS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {services.map((service: ServiceModel) => {
-            // const avg =
-            //   service.reviews.reduce((acc, r) => acc + r.rating, 0) / service.reviews.length;
             return (
               <div
                 key={service._id}
                 className="bg-white rounded-lg shadow hover:shadow-lg transition cursor-pointer overflow-hidden"
                 onClick={() => {
                   setSelected(service);
-                  // setSelectedImageIndex(0);
                 }}
               >
                 <div className="relative w-full h-40 bg-gray-100">
                   {service.images?.[0] && (
                     <Image
-                      src={service.images[0]} // base64
+                      src={service.images[0]}
                       alt={service.name}
                       fill
                       className="object-cover"
@@ -180,55 +188,79 @@ export default function ServicesPage() {
             <div className="flex flex-col md:flex-row gap-6">
               {/* GALERÍA CON CARRUSEL */}
               <div className="md:w-1/2 relative">
-                <div className="relative h-64 rounded-lg overflow-hidden">
-                  {selected?.images?.[0] && (
-                    <Image
-                      src={selected.images[0]}
-                      alt={selected.name}
-                      fill
-                      className="object-cover"
-                    />
-                  )}
+                <div className="relative h-64 rounded-lg overflow-hidden bg-gray-100">
+                  {selected.images && selected.images.length > 0 ? (
+                    <>
+                      <Image
+                        src={selected.images[selectedImageIndex]}
+                        alt={`${selected.name} - Imagen ${
+                          selectedImageIndex + 1
+                        }`}
+                        fill
+                        className="object-cover"
+                      />
 
-                  {/* Botones del carrusel */}
-                  {/* <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedImageIndex((prev) =>
-                        prev === 0 ? selected.images.length - 1 : prev - 1
-                      );
-                    }}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full p-2"
-                  >
-                    ‹
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedImageIndex((prev) =>
-                        prev === selected.images.length - 1 ? 0 : prev + 1
-                      );
-                    }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full p-2"
-                  >
-                    ›
-                  </button> */}
+                      {/* Botones de navegación del carrusel */}
+                      {selected.images.length > 1 && (
+                        <>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              prevImage();
+                            }}
+                            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-all duration-200"
+                          >
+                            <ChevronLeftIcon className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              nextImage();
+                            }}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-all duration-200"
+                          >
+                            <ChevronRightIcon className="w-5 h-5" />
+                          </button>
+                        </>
+                      )}
+
+                      {/* Indicador de posición */}
+                      {selected.images.length > 1 && (
+                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+                          {selectedImageIndex + 1} / {selected.images.length}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-gray-400">
+                      No hay imágenes disponibles
+                    </div>
+                  )}
                 </div>
 
-                {/* Miniaturas */}
-                {/* <div className="flex gap-2 mt-3 justify-center">
-                  {selected.images.map((img, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setSelectedImageIndex(i)}
-                      className={`relative w-20 h-14 rounded-md overflow-hidden border-2 ${
-                        i === selectedImageIndex ? "border-pink-500" : "border-transparent"
-                      }`}
-                    >
-                      <Image src={img} alt={`Miniatura ${i + 1}`} fill className="object-cover" />
-                    </button>
-                  ))}
-                </div> */}
+                {/* Miniaturas - Solo mostrar si hay más de 1 imagen */}
+                {selected.images && selected.images.length > 1 && (
+                  <div className="flex gap-2 mt-3 justify-center overflow-x-auto py-2">
+                    {selected.images.map((img, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setSelectedImageIndex(i)}
+                        className={`relative w-16 h-12 rounded-md overflow-hidden border-2 transition-all duration-200 flex-shrink-0 ${
+                          i === selectedImageIndex
+                            ? "border-blue-500 ring-2 ring-blue-200"
+                            : "border-transparent hover:border-gray-300"
+                        }`}
+                      >
+                        <Image
+                          src={img}
+                          alt={`Miniatura ${i + 1}`}
+                          fill
+                          className="object-cover"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* INFORMACIÓN DEL SERVICIO */}
@@ -239,20 +271,6 @@ export default function ServicesPage() {
                 <p className="mt-2 text-gray-800 leading-relaxed">
                   {selected.description}
                 </p>
-
-                {/* <div className="mt-4 border p-3 rounded-lg bg-gray-50">
-                  <h4 className="font-semibold mb-2 text-gray-900">Incluye:</h4>
-                  <ul className="text-sm text-gray-800 list-disc list-inside">
-                    {selected.includes.map((item, i) => (
-                      <li key={i}>{item}</li>
-                    ))}
-                  </ul>
-                </div> */}
-
-                {/* <div className="mt-4 flex items-center justify-between">
-                  <p className="text-lg font-semibold text-gray-900">${selected.price}</p>
-                  <p className="text-sm text-gray-700">Entrega en {selected.delivery}</p>
-                </div> */}
 
                 <button
                   className="mt-4 w-full bg-black text-white py-2 rounded hover:bg-gray-800 transition"
@@ -268,16 +286,6 @@ export default function ServicesPage() {
               <h4 className="text-lg font-semibold mb-4 text-gray-900">
                 Reseñas y Calificaciones
               </h4>
-
-              {/* <div className="text-gray-800 text-sm mb-4">
-                <div className="flex items-center gap-2">
-                  <StarRating rating={averageRating} />
-                  <p className="font-semibold text-xl">{averageRating.toFixed(1)}</p>
-                </div>
-                <p className="text-gray-700">
-                  Basado en {currentReviews.length} reseñas
-                </p>
-              </div> */}
 
               {/* BOTÓN ESCRIBIR RESEÑA */}
               {!showReviewBox && (
@@ -308,85 +316,8 @@ export default function ServicesPage() {
                     value={newReview}
                     onChange={(e) => setNewReview(e.target.value)}
                   ></textarea>
-
-                  {/* <div className="flex justify-end gap-2 mt-2">
-                    <button
-                      onClick={() => {
-                        if (newReview.trim() && newRating > 0 && selected) {
-                          const newEntry = {
-                            name: "Usuario Anónimo",
-                            text: newReview,
-                            rating: newRating,
-                          };
-
-                          const updatedReviews = [...currentReviews, newEntry];
-                          setCurrentReviews(updatedReviews);
-
-                          const avg =
-                            updatedReviews.reduce((acc, r) => acc + r.rating, 0) /
-                            updatedReviews.length;
-
-                          setServices((prev) =>
-                            prev.map((s) =>
-                              s.id === selected.id
-                                ? { ...s, reviews: updatedReviews, rating: avg }
-                                : s
-                            )
-                          );
-
-                          setNewReview("");
-                          setNewRating(0);
-                          setShowReviewBox(false);
-                        } else {
-                          alert("Por favor selecciona una calificación y escribe una reseña.");
-                        }
-                      }}
-                      className="bg-pink-600 text-white px-3 py-1 rounded hover:bg-pink-700"
-                    >
-                      Enviar
-                    </button>
-                    <button
-                      onClick={() => {
-                        setNewReview("");
-                        setNewRating(0);
-                        setShowReviewBox(false);
-                      }}
-                      className="border px-3 py-1 rounded hover:bg-gray-100"
-                    >
-                      Cancelar
-                    </button>
-                  </div> */}
                 </div>
               )}
-
-              {/* LISTA DE RESEÑAS */}
-              {/* <div className="mt-4 space-y-3">
-                {currentReviews.map((r, i) => (
-                  <div key={i} className="border rounded-lg p-3 bg-gray-50">
-                    <p className="font-semibold text-gray-900">{r.name}</p>
-                    <div className="flex items-center gap-1 mb-1">
-                      {Array.from({ length: 5 }).map((_, j) => (
-                        <svg
-                          key={j}
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill={j < r.rating ? "#facc15" : "none"}
-                          viewBox="0 0 24 24"
-                          strokeWidth={1.5}
-                          stroke={j < r.rating ? "#facc15" : "#9ca3af"}
-                          className="w-4 h-4"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M11.48 3.499a.562.562 0 011.04 0l2.125 4.304a.563.563 0 00.424.308l4.757.692a.562.562 0 01.312.959l-3.44 3.354a.563.563 0 00-.162.497l.812 4.73a.562.562 0 01-.815.592L12 17.347l-4.253 2.233a.562.562 0 01-.815-.592l.812-4.73a.563.563 0 00-.162-.497L4.142 9.762a.562.562 0 01.312-.959l4.757-.692a.563.563 0 00.424-.308L11.48 3.5z"
-                          />
-                        </svg>
-                      ))}
-                    </div>
-                    <p className="text-sm text-gray-800">{r.text}</p>
-                  </div>
-                ))}
-              </div> */}
             </div>
           </div>
         )}
