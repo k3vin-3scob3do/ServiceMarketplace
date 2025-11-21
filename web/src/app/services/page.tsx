@@ -5,8 +5,10 @@ import { StarIcon as SolidStar } from "@heroicons/react/24/solid";
 import { StarIcon as OutlineStar } from "@heroicons/react/24/outline";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { ServiceModel, ServiceStatus } from "../models/service";
+import { ReviewModel } from "../models/review";
 import { getServices } from "@/services/servicesService";
 import { requestContract } from "@/services/contractService";
+import { createReview, getReviewsByService } from "@/services/reviewService";
 import toast from "react-hot-toast";
 import { ContractModel, ContractStatus } from "../models/contract";
 
@@ -67,6 +69,8 @@ export default function ServicesPage() {
   const [newReview, setNewReview] = useState("");
   const [newRating, setNewRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
+  const [reviews, setReviews] = useState<ReviewModel[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
 
   const loadServices = async () => {
     try {
@@ -78,6 +82,21 @@ export default function ServicesPage() {
       console.error(error);
     } finally {
       setLoadingServices(false);
+    }
+  };
+
+  const loadReviews = async (serviceId: string) => {
+    try {
+      setLoadingReviews(true);
+      const res = await getReviewsByService(serviceId);
+      if (res.intCode === 200) {
+        setReviews(res.data || []);
+      }
+    } catch (error) {
+      console.error("Error loading reviews:", error);
+      toast.error("Error al cargar las reseñas");
+    } finally {
+      setLoadingReviews(false);
     }
   };
 
@@ -99,6 +118,54 @@ export default function ServicesPage() {
       console.error(error);
     } finally {
       setLoadingServices(false);
+    }
+  };
+
+  const submitReview = async () => {
+    if (!selected) return;
+
+    try {
+      const user = JSON.parse(localStorage.getItem("currentUser") ?? "{}");
+      
+      if (!user._id) {
+        toast.error("Debes iniciar sesión para escribir una reseña");
+        return;
+      }
+
+      if (newRating === 0) {
+        toast.error("Por favor selecciona una calificación");
+        return;
+      }
+
+      if (!newReview.trim()) {
+        toast.error("Por favor escribe una reseña");
+        return;
+      }
+
+      const reviewData: ReviewModel = {
+        service_id: selected._id!,
+        user_id: user._id,
+        user_name: user.name || "Usuario Anónimo",
+        rating: newRating,
+        comment: newReview.trim(),
+      };
+
+      const res = await createReview(reviewData);
+      
+      if (res.intCode === 200) {
+        toast.success("Reseña publicada exitosamente");
+        setNewReview("");
+        setNewRating(0);
+        setShowReviewBox(false);
+        
+        // Recargar las reseñas
+        await loadReviews(selected._id!);
+      } else {
+        toast.error("Error al publicar la reseña");
+      }
+    } catch (error) {
+      console.error("Error submitting review:", error);
+      toast.error("Error al publicar la reseña");
     }
   };
 
@@ -124,11 +191,19 @@ export default function ServicesPage() {
   // Resetear índice de imagen cuando cambia el servicio seleccionado
   useEffect(() => {
     setSelectedImageIndex(0);
+    if (selected) {
+      loadReviews(selected._id!);
+    }
   }, [selected]);
 
   useEffect(() => {
     loadServices();
   }, []);
+
+  // Calcular promedio de calificaciones
+  const averageRating = reviews.length > 0 
+    ? reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length 
+    : 0;
 
   return (
     <main className="bg-gray-50 min-h-screen text-gray-900">
@@ -166,13 +241,6 @@ export default function ServicesPage() {
                   <p className="text-sm text-gray-700 mt-1">
                     {service.provider_name}
                   </p>
-                  <div className="flex items-center text-sm mt-2 text-gray-800 gap-1">
-                    {/* <StarRating rating={avg || 0} />
-                    <span className="font-medium ml-2">{avg.toFixed(1)}</span>
-                    <span className="ml-1 text-gray-600">
-                      ({service.reviews.length} reseñas)
-                    </span> */}
-                  </div>
                   <p className="mt-2 font-semibold text-gray-900">
                     ${service.price}
                   </p>
@@ -193,9 +261,7 @@ export default function ServicesPage() {
                     <>
                       <Image
                         src={selected.images[selectedImageIndex]}
-                        alt={`${selected.name} - Imagen ${
-                          selectedImageIndex + 1
-                        }`}
+                        alt={`${selected.name} - Imagen ${selectedImageIndex + 1}`}
                         fill
                         className="object-cover"
                       />
@@ -287,6 +353,17 @@ export default function ServicesPage() {
                 Reseñas y Calificaciones
               </h4>
 
+              {/* RESUMEN DE CALIFICACIONES */}
+              <div className="text-gray-800 text-sm mb-4">
+                <div className="flex items-center gap-2">
+                  <StarRating rating={averageRating} />
+                  <p className="font-semibold text-xl">{averageRating.toFixed(1)}</p>
+                </div>
+                <p className="text-gray-700">
+                  Basado en {reviews.length} reseñas
+                </p>
+              </div>
+
               {/* BOTÓN ESCRIBIR RESEÑA */}
               {!showReviewBox && (
                 <button
@@ -316,8 +393,55 @@ export default function ServicesPage() {
                     value={newReview}
                     onChange={(e) => setNewReview(e.target.value)}
                   ></textarea>
+
+                  <div className="flex justify-end gap-2 mt-2">
+                    <button
+                      onClick={submitReview}
+                      className="bg-black text-white px-3 py-1 rounded hover:bg-gray-800"
+                    >
+                      Enviar
+                    </button>
+                    <button
+                      onClick={() => {
+                        setNewReview("");
+                        setNewRating(0);
+                        setShowReviewBox(false);
+                      }}
+                      className="border px-3 py-1 rounded hover:bg-gray-100"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
                 </div>
               )}
+
+              {/* LISTA DE RESEÑAS */}
+              <div className="mt-4 space-y-3">
+                {loadingReviews ? (
+                  <div className="text-center py-4">Cargando reseñas...</div>
+                ) : reviews.length === 0 ? (
+                  <div className="text-center py-4 text-gray-500">
+                    No hay reseñas aún. Sé el primero en opinar.
+                  </div>
+                ) : (
+                  reviews.map((review) => (
+                    <div key={review._id} className="border rounded-lg p-3 bg-gray-50">
+                      <p className="font-semibold text-gray-900">
+                        {review.user_name}
+                      </p>
+                      <div className="flex items-center gap-1 mb-1">
+                        <StarRating rating={review.rating} />
+                      </div>
+                      <p className="text-sm text-gray-800">{review.comment}</p>
+                      {review.created_at && (
+                        <p className="text-xs text-gray-500 mt-2">
+                          {new Date(review.created_at).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
         )}
