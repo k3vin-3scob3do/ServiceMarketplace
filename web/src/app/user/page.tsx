@@ -4,10 +4,15 @@ import Image from "next/image";
 import { Briefcase, Bell, CheckCircle, Pencil, Lock, User } from "lucide-react";
 import { getUser, updateUser } from "@/services/userService";
 import { UserModel, UserRole, UserStatus } from "../models/user";
+import toast from "react-hot-toast";
+import { getContracts, updateStatus } from "@/services/contractService";
+import { ContractModel, ContractStatus } from "../models/contract";
 
 export default function UserPanel() {
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingContracts, setLoadingContracts] = useState(true);
+  const [contracts, setContracts] = useState<ContractModel[]>([]);
   const [user, setUser] = useState<UserModel>({
     _id: "",
     name: "",
@@ -22,6 +27,7 @@ export default function UserPanel() {
 
   useEffect(() => {
     loadUser();
+    loadContracts()
   }, []);
 
   async function loadUser() {
@@ -46,37 +52,44 @@ export default function UserPanel() {
       console.log("Guardado:", res);
 
       if (res.intCode === 200) {
-        alert("Usuario actualizado correctamente");
+        toast.success("Usuario actualizado correctamente");
       }
     } catch (error) {
+      toast.success("Error al guardar los cambios");
       console.log("Error actualizando usuario", error);
-      alert("Error al guardar los cambios");
     }
   }
 
-  const [services] = useState([
-    {
-      name: "Limpieza del hogar",
-      provider: "María Rodríguez",
-      date: "15 Ene 2025, 10:00",
-      status: "Pendiente",
-      rating: 5,
-    },
-    {
-      name: "Reparación fontanería",
-      provider: "Carlos Martín",
-      date: "12 Ene 2025, 16:30",
-      status: "Activo",
-      rating: 5,
-    },
-    {
-      name: "Jardinería",
-      provider: "Luis Fernández",
-      date: "8 Ene 2025, 09:00",
-      status: "Finalizado",
-      rating: 4,
-    },
-  ]);
+  const loadContracts = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem("currentUser") ?? "{}");
+
+      setLoadingContracts(true);
+
+      const res = await getContracts(null, null, user._id, null)
+      setContracts(res.data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoadingContracts(false);
+    }
+  };
+
+  const updateContractStatus = async (contractId: string, status: ContractStatus) => {
+    try {
+      setLoadingContracts(true);
+      const res = await updateStatus(contractId, status)
+      if(res.intCode === 200) {
+        toast.success("Has aceptado el contrato con exito")
+        await loadContracts()
+      }
+    } catch (error) {
+      toast.error("Algo salio mal, vuelve a intentar")
+      console.error(error);
+    } finally {
+      setLoadingContracts(false);
+    }
+  }
 
   const [notifications, setNotifications] = useState([
     {
@@ -222,38 +235,100 @@ export default function UserPanel() {
 
         {/* SERVICIOS CONTRATADOS */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Servicios Contratados</h2>
-          <div className="space-y-3">
-            {services.map((s, i) => (
-              <div
-                key={i}
-                className="border rounded-lg p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between hover:bg-gray-50"
-              >
-                <div>
-                  <h3 className="font-medium text-gray-900">{s.name}</h3>
-                  <p className="text-sm text-gray-600">
-                    {s.provider} • {s.date}
-                  </p>
-                  <Stars rating={s.rating} />
-                </div>
-                <span
-                  className={`px-2 py-1 text-xs font-medium rounded-full mt-2 sm:mt-0 ${
-                    s.status === "Pendiente"
-                      ? "bg-yellow-100 text-yellow-700"
-                      : s.status === "Activo"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-gray-100 text-gray-600"
-                  }`}
-                >
-                  {s.status}
-                </span>
-              </div>
-            ))}
-          </div>
+          <h3 className="text-lg font-semibold mb-4">Contratos en progreso</h3>
+
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="border-b text-gray-600">
+                <th className="text-left py-2">Cliente</th>
+                <th>Servicio</th>
+                <th>Proveedor</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {contracts.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="text-center py-4 text-gray-500">
+                    No hay contratos en progreso
+                  </td>
+                </tr>
+              )}
+
+              {contracts
+                .map((c: ContractModel) => (
+                  <tr key={c._id} className="border-b hover:bg-gray-50">
+
+                    {/* CLIENTE */}
+                    <td className="py-2">
+                      <div className="flex items-center gap-3">
+                        <Image
+                          src="https://cdn-icons-png.flaticon.com/512/2202/2202112.png"
+                          width={28}
+                          height={28}
+                          alt="Usuario"
+                          className="rounded-full"
+                        />
+                        <div>
+                          <p className="font-medium">{c.client_name}</p>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* SERVICIO */}
+                    <td className="text-center">{c.service_name}</td>
+
+                    {/* PROVEEDOR */}
+                    <td className="text-center">{c.provider_name}</td>
+
+                    {/* STATUS (CORRECTAMENTE CENTRADO) */}
+                    <td className="text-center">
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          c.status === ContractStatus.REQUESTED
+                            ? "bg-yellow-100 text-yellow-700"
+                            : c.status === ContractStatus.IN_PROGRESS
+                            ? "bg-green-100 text-green-700"
+                            : c.status === ContractStatus.REJECTED
+                            ? "bg-red-100 text-red-700"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {c.status}
+                      </span>
+                    </td>
+
+                    {/* FECHA */}
+                    <td className="text-center text-gray-600">
+                      {new Date(c.request_date ?? "").toLocaleDateString("es-MX", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </td>
+
+                    {/* ACCIÓN (SOLO SI ESTÁ EN PROGRESO) */}
+                    <td className="text-center py-2">
+                      {c.status === ContractStatus.IN_PROGRESS && (
+                        <button
+                          onClick={() => updateContractStatus(c._id!, ContractStatus.COMPLETED)}
+                          className="px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 text-xs"
+                        >
+                          Finalizar
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
         </div>
 
         {/* NOTIFICACIONES */}
-        <div className="bg-white rounded-lg shadow p-6">
+        {/* <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Notificaciones</h2>
             <button
@@ -295,7 +370,7 @@ export default function UserPanel() {
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
       </section>
     </main>
   );

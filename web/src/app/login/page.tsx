@@ -5,6 +5,8 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import toast from "react-hot-toast";
 import { useUser } from "@/app/context/userContext";
+import { UserModel, UserRole } from "../models/user";
+import { login } from "@/services/authService";
 
 interface LoginResponse {
   intCode?: number;
@@ -24,59 +26,35 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const { setUser } = useUser();
 
-  async function submit(e: React.FormEvent) {
+ async function onLogin(e: React.FormEvent) {
     e.preventDefault();
     setErr(null);
     setLoading(true);
-
     try {
-      const res = await api<LoginResponse>("/auth/login", {
-        method: "POST",
-        body: JSON.stringify(form),
-      });
 
-      console.log("Backend detail:", res.data);
+      const res = await login(form);  
+      console.log("Login", res);
+      if(res.intCode === 200) {
+        toast.success("Inicio de sesión exitoso");
+        const user: UserModel = res.data
+        localStorage.setItem("currentUser", JSON.stringify(user));
+        setUser(user);
 
-      if (!res.ok) {
-        const backendMsg =
-          res.data.detail ??
-          res.data.strMessage ??
-          "Correo o contraseña incorrectos";
+        const role = res.data.role;
+        if(role === UserRole.ADMIN){
+          router.push("/admin")
+        }else if(role === UserRole.PROVIDER){
+          router.push("/provider")
+        }else {
+          router.push("/user");
+        }
 
-        toast.error(String(backendMsg));
-
-        return;
       }
-
-      toast.success("Inicio de sesión exitoso");
-
-      localStorage.setItem("currentUser", JSON.stringify(res.data));
-      localStorage.setItem("token", res.data.token ?? "");
-
-      const role = res.data.role;
-      setUser(res.data);
-
-      if (role === "admin") {
-        router.push("/admin");
-      } else if (role === "provider") {
-        router.push("/provider");
-      } else {
-        router.push("/");
-      }
-
-      setTimeout(() => {
-        router.refresh();
-      }, 50);
-    } catch (err: any) {
-      console.log("ERROR CATCH:", err);
-
-      const backendMsg =
-        (err?.data as any)?.detail ||
-        (err?.data as any)?.strMessage ||
-        err?.message ||
-        "Error al iniciar sesión";
-
-      toast.error(backendMsg);
+    } catch (e: any) {
+      toast.error("El usuario o contraseña son incorrectos");
+      setErr(e.message);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -87,7 +65,7 @@ export default function LoginPage() {
       </h1>
 
       <form
-        onSubmit={submit}
+        onSubmit={onLogin}
         className="border rounded-xl p-6 space-y-3 shadow-sm bg-white"
       >
         <input
@@ -106,7 +84,7 @@ export default function LoginPage() {
           onChange={(e) => setForm({ ...form, password: e.target.value })}
         />
 
-        {err && <p className="text-sm text-red-600">{err}</p>}
+        {/* {err && <p className="text-sm text-red-600">{err}</p>} */}
 
         <button
           disabled={loading}

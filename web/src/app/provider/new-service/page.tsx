@@ -24,7 +24,7 @@ export default function NewServiceForm({
   const [form, setForm] = useState({
     name: "",
     category: "",
-    description: "Instalación y Reparación de Calentadores",
+    description: "",
     price: 0,
     images: [] as string[],
   });
@@ -180,7 +180,7 @@ export default function NewServiceForm({
             <div className="border rounded-lg p-2.5">$</div>
             <input
               type="number"
-              value={form.price}
+              value={form.price === 0 ? '' : form.price}
               onChange={(e) =>
                 setForm({ ...form, price: Number(e.target.value) })
               }

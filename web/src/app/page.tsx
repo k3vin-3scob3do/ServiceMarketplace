@@ -4,36 +4,46 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { Search, User, Briefcase } from "lucide-react";
-import { LoginRequest, UserModel } from "./models/user";
+import { LoginRequest, UserModel, UserRole } from "./models/user";
 import { login } from "@/services/authService";
+import toast from "react-hot-toast";
+import { useUser } from "./context/userContext";
 
 export default function HomePage() {
-  const r = useRouter();
-  // login state
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const router = useRouter();
+  const [form, setForm] = useState({ email: "", password: "" });
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const { setUser } = useUser();
 
   async function onLogin(e: React.FormEvent) {
     e.preventDefault();
     setErr(null);
     setLoading(true);
     try {
-      const loginData: LoginRequest = {
-        password: password,
-        email: email
-      };
 
-      const res = await login(loginData);  
+      const res = await login(form);  
+      console.log("res Login", res);
       console.log("Login", res);
       if(res.intCode === 200) {
+        toast.success("Inicio de sesión exitoso");
         const user: UserModel = res.data
         localStorage.setItem("currentUser", JSON.stringify(user));
-        r.push("/services");
+        setUser(user);
+        
+        const role = res.data.role;
+        if(role === UserRole.ADMIN){
+          router.push("/admin")
+        }else if(role === UserRole.PROVIDER){
+          router.push("/provider")
+        }else {
+          router.push("/user");
+        }
+
       }
     } catch (e: any) {
       setErr(e.message);
+      toast.error("El usuario o contraseña son incorrectos");
     } finally {
       setLoading(false);
     }
@@ -90,8 +100,8 @@ export default function HomePage() {
               <label className="text-sm">Email</label>
               <input
                 className="w-full border rounded px-3 py-2 mt-1 mb-3"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
                 type="email"
                 placeholder="correo@ejemplo.com"
                 required
@@ -100,14 +110,14 @@ export default function HomePage() {
               <label className="text-sm">Contraseña</label>
               <input
                 className="w-full border rounded px-3 py-2 mt-1 mb-4"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
                 type="password"
                 placeholder="••••••••"
                 required
               />
 
-              {err && <p className="text-sm text-red-600 mb-2">{err}</p>}
+              {/* {err && <p className="text-sm text-red-600 mb-2">{err}</p>} */}
 
               <button
                 disabled={loading}

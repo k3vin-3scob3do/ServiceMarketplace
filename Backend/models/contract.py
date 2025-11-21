@@ -7,11 +7,13 @@ class ContractStatus(str, Enum):
     REJECTED = 'rechazado'
     IN_PROGRESS = 'en_progreso'
     COMPLETED = 'completado'
+    CANCELED = 'cancelado'
     
 class Contract(BaseModel):
     _id: Optional[str] = None
     client_id: str
     service_id: str
+    provider_id: str
     description: str
     status: ContractStatus = ContractStatus.REQUESTED
     

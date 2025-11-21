@@ -16,6 +16,9 @@ import { Plus } from "lucide-react";
 import NewServiceForm from "./new-service/page";
 import { ServiceModel } from "../models/service";
 import { getServices } from "@/services/servicesService";
+import { getContracts, updateStatus } from "@/services/contractService";
+import { ContractModel, ContractStatus } from "../models/contract";
+import toast from "react-hot-toast";
 
 export default function ProviderDashboard() {
   const [showModal, setShowModal] = useState(false);
@@ -24,6 +27,8 @@ export default function ProviderDashboard() {
   const [services, setServices] = useState<ServiceModel[]>([]);
   const [loadingServices, setLoadingServices] = useState(true);
   const [errorServices, setErrorServices] = useState<string | null>(null);
+  const [contracts, setContracts] = useState<ContractModel[]>([]);
+  const [loadingContracts, setLoadingContracts] = useState(true);
 
   const loadServices = async () => {
     try {
@@ -41,8 +46,40 @@ export default function ProviderDashboard() {
     }
   };
 
+  const loadContracts = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem("currentUser") ?? "{}");
+
+      setLoadingContracts(true);
+
+      const res = await getContracts(user._id, null, null, null)
+      setContracts(res.data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoadingContracts(false);
+    }
+  };
+
+  const updateContractStatus = async (contractId: string, status: ContractStatus) => {
+    try {
+      setLoadingContracts(true);
+      const res = await updateStatus(contractId, status)
+      if(res.intCode === 200) {
+        toast.success("Has aceptado el contrato con exito")
+        await loadContracts()
+      }
+    } catch (error) {
+      toast.error("Algo salio mal, vuelve a intentar")
+      console.error(error);
+    } finally {
+      setLoadingContracts(false);
+    }
+  }
+
   useEffect(() => {
     loadServices();
+    loadContracts()
   }, []);
 
   const openNewServiceModal = () => {
@@ -182,9 +219,9 @@ export default function ProviderDashboard() {
                           className="w-4 h-4 cursor-pointer hover:text-pink-600"
                           onClick={() => openEditModal(s)}
                         />
-                        <Check className="w-4 h-4 cursor-pointer hover:text-green-600" />
+                        {/* <Check className="w-4 h-4 cursor-pointer hover:text-green-600" />
                         <X className="w-4 h-4 cursor-pointer hover:text-red-600" />
-                        <Eye className="w-4 h-4 cursor-pointer hover:text-blue-600" />
+                        <Eye className="w-4 h-4 cursor-pointer hover:text-blue-600" /> */}
                       </td>
                     </tr>
                   ))}
@@ -196,12 +233,98 @@ export default function ProviderDashboard() {
           <div className="space-y-6">
             <div className="bg-white rounded-lg shadow p-5">
               <h4 className="font-semibold mb-4">Solicitudes Recientes</h4>
-              <p className="text-gray-500 text-sm">Demo estático</p>
+
+              {contracts
+                .filter(c => c.status === ContractStatus.REQUESTED)
+                .map((c: ContractModel) => (
+                  <div key={c._id} className="border rounded-lg p-3 mb-3">
+                    <div className="flex items-center gap-3">
+                      <Image
+                        src="https://cdn-icons-png.flaticon.com/512/2202/2202112.png"
+                        width={32}
+                        height={32}
+                        alt="Usuario"
+                        className="rounded-full"
+                      />
+
+                      <div>
+                        <p className="font-medium">{c.client_name}</p>
+                        <p className="text-sm text-gray-500">{c.service_name}</p>
+                        <p className="text-xs text-gray-400">
+                          {new Date(c.request_date ?? "").toLocaleDateString("es-MX", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 mt-3">
+                      <button
+                        className="flex-1 bg-green-600 text-white py-1.5 rounded hover:bg-green-700 text-sm"
+                        onClick={() => updateContractStatus(c._id!, ContractStatus.IN_PROGRESS)}
+                      >
+                        Aceptar
+                      </button>
+
+                      <button
+                        className="flex-1 bg-gray-200 py-1.5 rounded hover:bg-gray-300 text-sm"
+                        onClick={() => updateContractStatus(c._id!, ContractStatus.REJECTED)}
+                      >
+                        Rechazar
+                      </button>
+                    </div>
+                  </div>
+                ))}
             </div>
 
             <div className="bg-white rounded-lg shadow p-5">
-              <h4 className="font-semibold mb-4">Notificaciones</h4>
-              <p className="text-gray-500 text-sm">Demo estático</p>
+              <h4 className="font-semibold mb-4">Contratos Activos</h4>
+
+              {contracts
+                .filter(c => c.status === ContractStatus.IN_PROGRESS)
+                .map((c: ContractModel) => (
+                  <div key={c._id} className="border rounded-lg p-3 mb-3">
+                    <div className="flex items-center gap-3">
+                      <Image
+                        src="https://cdn-icons-png.flaticon.com/512/2202/2202112.png"
+                        width={32}
+                        height={32}
+                        alt="Usuario"
+                        className="rounded-full"
+                      />
+
+                      <div>
+                        <p className="font-medium">{c.client_name}</p>
+                        <p className="text-sm text-gray-500">{c.service_name}</p>
+                        <p className="text-xs text-gray-400">
+                          {new Date(c.request_date ?? "").toLocaleDateString("es-MX", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </p>
+                        {/* <p className="text-xs text-gray-400">
+                          {new Date(c.createdAt ?? "").toLocaleDateString("es-MX", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </p> */}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 mt-3">
+                      <button
+                        className="flex-1 bg-red-600 text-white py-1.5 rounded hover:bg-red-700 text-sm"
+                        onClick={() => updateContractStatus(c._id!, ContractStatus.CANCELED)}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ))}
             </div>
           </div>
         </div>

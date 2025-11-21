@@ -9,8 +9,8 @@ def requestContract(contract: Contract):
     return contract_controller.requestContract(contract)
 
 @router.get("/")
-def getContracts(providerId: str, serviceId: str):
-    return contract_controller.getContracts(providerId, serviceId)
+def getContracts(providerId: str = None, serviceId: str = None, clientId: str = None, status: ContractStatus = None):
+    return contract_controller.getContracts(providerId, serviceId, clientId, status)
 
 @router.get("/{contractId}")
 def getContract(contractId: str):
@@ -21,5 +21,5 @@ def deleteContract(contractId: str):
     return contract_controller.deleteContract(contractId)
 
 @router.post("/status/{contractId}")
-def updateStatus(contractId: str, status: ContractStatus):
+def updateStatus(contractId: str, status: ContractStatus = None):
     return contract_controller.updateStatus(contractId, status)

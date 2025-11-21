@@ -23,9 +23,11 @@ export default function Navbar() {
           </div>
         ) : (
           <div className="flex gap-6 text-gray-700 font-medium">
-            <Link href="/services" className="hover:text-pink-600 transition">
-              Servicios
-            </Link>
+            {currentUser?.role === "cliente" && (
+              <Link href="/services" className="hover:text-pink-600 transition">
+                Servicios
+              </Link>
+            )}
 
             {currentUser?.role === "cliente" && (
               <Link href="/user" className="flex items-center gap-1 hover:text-pink-600 transition">

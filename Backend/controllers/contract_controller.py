@@ -1,3 +1,4 @@
+from datetime import datetime
 from models.contract import Contract, ContractStatus
 from database import db
 from bson import ObjectId
@@ -5,7 +6,9 @@ from utils import ResponseMessage
 
 def requestContract(contract: Contract):
     try:
-        result = db['contracts'].insert_one(contract.model_dump())
+        c = contract.model_dump()
+        c['request_date'] = datetime.now()
+        result = db['contracts'].insert_one(c)
         if result.inserted_id:
             return ResponseMessage.message200
         
@@ -14,13 +17,17 @@ def requestContract(contract: Contract):
     except:
         return ResponseMessage.message500
 
-def getContracts(providerId: str, serviceId: str):
+def getContracts(providerId: str, serviceId: str, clientId: str, status: str):
     try:
         filters = {}
         if providerId is not None and ObjectId.is_valid(providerId):
             filters['provider_id'] = providerId
         if serviceId is not None and ObjectId.is_valid(serviceId):
             filters['service_id'] = serviceId
+        if clientId is not None and ObjectId.is_valid(clientId):
+            filters['client_id'] = clientId
+        if status is not None:
+            filters['status'] = status
 
         contracts = []
         
@@ -41,7 +48,7 @@ def getContracts(providerId: str, serviceId: str):
         }
         
     except:
-        pass
+        return ResponseMessage.message500
     
 def getContract(contractId: str):
     try:
