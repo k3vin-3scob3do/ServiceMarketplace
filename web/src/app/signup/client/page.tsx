@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { User, Mail, Lock, Phone, Loader2 } from "lucide-react";
 import { registerUser } from "@/services/userService";
 import { UserModel, UserRole, UserStatus } from "@/app/models/user";
+import toast from "react-hot-toast";
 
 export default function SignupClient() {
   const r = useRouter();
@@ -27,6 +28,7 @@ export default function SignupClient() {
       const res = await registerUser(userData);  
       console.log("Registrado cliente:", res);
       if(res.intCode === 200){
+        toast.success("Usuario tipo cliente registrado con exito");
         r.push("/#login");
       }
     } catch (error: any) {

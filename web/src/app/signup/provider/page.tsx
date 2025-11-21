@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { User, Mail, Lock, Phone, Briefcase, Type, Loader2 } from "lucide-react";
 import { UserModel, UserRole, UserStatus } from "@/app/models/user";
 import { registerUser } from "@/services/userService";
+import toast from "react-hot-toast";
 
 export default function SignupProvider() {
   const r = useRouter();
@@ -32,6 +33,7 @@ export default function SignupProvider() {
       const res = await registerUser(userData);  
       console.log("Registrado proveedor:", res);
       if(res.intCode === 200){
+        toast.success("Usuario tipo proveedor registrado con exito")
         r.push("/#login");
       }
     } catch (error: any) {

@@ -11,10 +11,10 @@ export default function Navbar() {
     <header className="sticky top-0 z-10 bg-white/90 backdrop-blur border-b shadow-sm">
       <nav className="mx-auto max-w-6xl px-4 h-14 flex items-center justify-between">
         
-        <Link href="/" className="font-bold text-black flex items-center gap-2">
+        <div className="font-bold text-black flex items-center gap-2">
           <Briefcase className="w-5 h-5 text-pink-600" />
           ++Servicios
-        </Link>
+        </div>
 
         {/* Si no está listo, mostramos un contenedor vacío que NO rompe hidratación */}
         {!isReady ? (

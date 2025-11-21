@@ -5,5 +5,5 @@ MONGO_URL_SERVER = "mongodb+srv://0241747_db_user:UTNirq3TNXvRwvmJ@cluster0.xa86
 # MONGO_URL_SERVIDOR = "" 
 DB_NAME = "ServiceMarketplaceDB"
 
-client = MongoClient(MONGO_URL)
+client = MongoClient(MONGO_URL_SERVER)
 db = client[DB_NAME]

@@ -8,7 +8,7 @@ import { ServiceModel, ServiceStatus, ServiceCategory } from "../models/service"
 import { ReviewModel } from "../models/review";
 import { getServices } from "@/services/servicesService";
 import { requestContract } from "@/services/contractService";
-import { createReview, getReviewsByService } from "@/services/reviewService";
+import { getReviews, registerReview } from "@/services/reviewService";
 import toast from "react-hot-toast";
 import { ContractModel, ContractStatus } from "../models/contract";
 
@@ -82,7 +82,7 @@ export default function ServicesPage() {
     try {
       const user = JSON.parse(localStorage.getItem("currentUser") ?? "{}");
       setLoadingServices(true);
-      const res = await getServices(null, ServiceStatus.APPROVED, null, searchQuery || null);
+      const res = await getServices(null, ServiceStatus.APPROVED, null);
       if (res.intCode === 200) {
         setServices(res.data);
         applyFilters(res.data, searchQuery, selectedCategory);
@@ -135,20 +135,20 @@ export default function ServicesPage() {
     setFilteredServices(services);
   };
 
-  const loadReviews = async (serviceId: string) => {
-    try {
-      setLoadingReviews(true);
-      const res = await getReviewsByService(serviceId);
-      if (res.intCode === 200) {
-        setReviews(res.data || []);
-      }
-    } catch (error) {
-      console.error("Error loading reviews:", error);
-      toast.error("Error al cargar las reseñas");
-    } finally {
-      setLoadingReviews(false);
-    }
-  };
+  // const loadReviews = async (serviceId: string) => {
+  //   try {
+  //     setLoadingReviews(true);
+  //     const res = await getReviewsByService(serviceId);
+  //     if (res.intCode === 200) {
+  //       setReviews(res.data || []);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error loading reviews:", error);
+  //     toast.error("Error al cargar las reseñas");
+  //   } finally {
+  //     setLoadingReviews(false);
+  //   }
+  // };
 
   const requestService = async (service: ServiceModel) => {
     try {
@@ -205,16 +205,17 @@ export default function ServicesPage() {
         comment: newReview.trim(),
       };
 
-      const res = await createReview(reviewData);
+      const res = await registerReview(reviewData)
       
       if (res.intCode === 200) {
         toast.success("Reseña publicada exitosamente");
+        loadReviews()
         setNewReview("");
         setNewRating(0);
         setShowReviewBox(false);
         
         // Recargar las reseñas
-        await loadReviews(selected._id!);
+        // await loadReviews(selected._id!);
       } else {
         toast.error("Error al publicar la reseña");
       }
@@ -224,6 +225,19 @@ export default function ServicesPage() {
     }
   };
 
+  const loadReviews = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem("currentUser") ?? "{}");
+      
+      const res = await getReviews(selected?._id, user._id);
+      if (res.intCode === 200) {
+        setReviews(res.data)
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Error al cargar reseñas");
+    }
+  };
   // Navegación del carrusel
   const nextImage = () => {
     const images = selected?.images;
@@ -247,7 +261,7 @@ export default function ServicesPage() {
   useEffect(() => {
     setSelectedImageIndex(0);
     if (selected) {
-      loadReviews(selected._id!);
+      loadReviews();
     }
   }, [selected]);
 
