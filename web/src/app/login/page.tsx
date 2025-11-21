@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import toast from "react-hot-toast";
+import { useUser } from "@/app/context/userContext";
 
 interface LoginResponse {
   intCode?: number;
@@ -21,6 +22,7 @@ export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const { setUser } = useUser();
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -45,6 +47,8 @@ export default function LoginPage() {
 
         return;
       }
+
+      setUser(res.data); 
 
       toast.success("Inicio de sesión exitoso");
 
