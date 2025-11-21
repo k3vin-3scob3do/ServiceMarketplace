@@ -32,6 +32,13 @@ export default function NewServiceForm({
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const convertToBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file); // genera algo tipo "data:image/jpeg;base64,AAAA..."
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
   // -----------------------------
   //  CARGAR DATOS SI ES EDICIÓN
   // -----------------------------
@@ -63,13 +70,17 @@ export default function NewServiceForm({
     try {
       const user = JSON.parse(localStorage.getItem("currentUser") ?? "{}");
 
-      const uploadedUrls = images.map((file, index) => {
-        return `https://fake-storage.com/uploads/${Date.now()}_${index}_${file.name}`;
-      });
+      // 1) convertir las nuevas imágenes (state `images`) a base64
+      const uploadedBase64 = await Promise.all(
+        images.map((file) => convertToBase64(file))
+      );
 
+      // 2) armar el objeto que se manda al backend
       const serviceData: ServiceModel = {
         ...form,
-        images: [...form.images, ...uploadedUrls],
+        // form.images = imágenes que ya existían (si estás editando)
+        // uploadedBase64 = nuevas imágenes agregadas en este formulario
+        images: [...form.images, ...uploadedBase64],
         provider_id: user._id,
       };
 
@@ -180,7 +191,7 @@ export default function NewServiceForm({
             <div className="border rounded-lg p-2.5">$</div>
             <input
               type="number"
-              value={form.price === 0 ? '' : form.price}
+              value={form.price === 0 ? "" : form.price}
               onChange={(e) =>
                 setForm({ ...form, price: Number(e.target.value) })
               }

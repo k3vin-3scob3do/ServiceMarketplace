@@ -91,10 +91,10 @@ export default function ServicesPage() {
         service_id: service._id,
         provider_id: service.provider_id,
         description: `El usuario ${user.name} ha contratado el servicio ${service.name} realizado por ${service.provider_name}`,
-        status: ContractStatus.REQUESTED
-      }
+        status: ContractStatus.REQUESTED,
+      };
       const res = await requestContract(contractData);
-      if(res.intCode === 200){
+      if (res.intCode === 200) {
         toast.success("Servicio contratado exitosamente");
       }
     } catch (error) {
@@ -102,7 +102,7 @@ export default function ServicesPage() {
     } finally {
       setLoadingServices(false);
     }
-  }
+  };
 
   useEffect(() => {
     loadServices();
@@ -122,7 +122,9 @@ export default function ServicesPage() {
   return (
     <main className="bg-gray-50 min-h-screen text-gray-900">
       <section className="max-w-6xl mx-auto px-4 py-12">
-        <h2 className="text-2xl font-semibold mb-8 text-gray-900">Servicios Disponibles</h2>
+        <h2 className="text-2xl font-semibold mb-8 text-gray-900">
+          Servicios Disponibles
+        </h2>
 
         {/* GRID DE SERVICIOS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -138,12 +140,24 @@ export default function ServicesPage() {
                   // setSelectedImageIndex(0);
                 }}
               >
-                <div className="relative w-full h-40">
-                  {/* <Image src={''} alt={service.name} fill className="object-cover" /> */}
+                <div className="relative w-full h-40 bg-gray-100">
+                  {service.images?.[0] && (
+                    <Image
+                      src={service.images[0]} // base64
+                      alt={service.name}
+                      fill
+                      className="object-cover"
+                    />
+                  )}
                 </div>
+
                 <div className="p-4">
-                  <h3 className="font-semibold text-gray-900">{service.name}</h3>
-                  <p className="text-sm text-gray-700 mt-1">{service.provider_name}</p>
+                  <h3 className="font-semibold text-gray-900">
+                    {service.name}
+                  </h3>
+                  <p className="text-sm text-gray-700 mt-1">
+                    {service.provider_name}
+                  </p>
                   <div className="flex items-center text-sm mt-2 text-gray-800 gap-1">
                     {/* <StarRating rating={avg || 0} />
                     <span className="font-medium ml-2">{avg.toFixed(1)}</span>
@@ -151,7 +165,9 @@ export default function ServicesPage() {
                       ({service.reviews.length} reseñas)
                     </span> */}
                   </div>
-                  <p className="mt-2 font-semibold text-gray-900">${service.price}</p>
+                  <p className="mt-2 font-semibold text-gray-900">
+                    ${service.price}
+                  </p>
                 </div>
               </div>
             );
@@ -165,12 +181,14 @@ export default function ServicesPage() {
               {/* GALERÍA CON CARRUSEL */}
               <div className="md:w-1/2 relative">
                 <div className="relative h-64 rounded-lg overflow-hidden">
-                  <Image
-                    src={''}
-                    alt={selected.name}
-                    fill
-                    className="object-cover transition-all duration-300"
-                  />
+                  {selected?.images?.[0] && (
+                    <Image
+                      src={selected.images[0]}
+                      alt={selected.name}
+                      fill
+                      className="object-cover"
+                    />
+                  )}
 
                   {/* Botones del carrusel */}
                   {/* <button
@@ -215,8 +233,12 @@ export default function ServicesPage() {
 
               {/* INFORMACIÓN DEL SERVICIO */}
               <div className="md:w-1/2">
-                <h3 className="text-xl font-semibold text-gray-900">{selected.name}</h3>
-                <p className="mt-2 text-gray-800 leading-relaxed">{selected.description}</p>
+                <h3 className="text-xl font-semibold text-gray-900">
+                  {selected.name}
+                </h3>
+                <p className="mt-2 text-gray-800 leading-relaxed">
+                  {selected.description}
+                </p>
 
                 {/* <div className="mt-4 border p-3 rounded-lg bg-gray-50">
                   <h4 className="font-semibold mb-2 text-gray-900">Incluye:</h4>
@@ -232,7 +254,7 @@ export default function ServicesPage() {
                   <p className="text-sm text-gray-700">Entrega en {selected.delivery}</p>
                 </div> */}
 
-                <button 
+                <button
                   className="mt-4 w-full bg-black text-white py-2 rounded hover:bg-gray-800 transition"
                   onClick={() => requestService(selected)}
                 >
@@ -270,7 +292,9 @@ export default function ServicesPage() {
               {/* FORMULARIO DE RESEÑA */}
               {showReviewBox && (
                 <div className="mt-4 border rounded-lg p-4 bg-gray-50">
-                  <p className="font-semibold mb-2 text-gray-900">Tu calificación:</p>
+                  <p className="font-semibold mb-2 text-gray-900">
+                    Tu calificación:
+                  </p>
                   <StarSelector
                     rating={newRating}
                     hoverRating={hoverRating}
