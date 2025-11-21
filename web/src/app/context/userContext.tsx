@@ -1,40 +1,37 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { UserModel } from "../models/user";
+import { useRouter } from "next/navigation";
 
-interface UserContextType {
-  user: UserModel | null;
-  setUser: (u: UserModel | null) => void;
-  logout: () => void;
-}
-
-const UserContext = createContext<UserContextType | undefined>(undefined);
+const UserContext = createContext<any>(null);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<UserModel | null>(null);
+  const [user, setUser] = useState<any>(null);
+  const [isReady, setIsReady] = useState(false);
+  const router = useRouter();
 
-  // Cargar desde localStorage al iniciar
   useEffect(() => {
     const saved = localStorage.getItem("currentUser");
-    if (saved) setUser(JSON.parse(saved));
+    if (saved) {
+      setUser(JSON.parse(saved));
+    }
+    setIsReady(true);
   }, []);
 
-  const logout = () => {
+  function logout() {
     localStorage.removeItem("currentUser");
     setUser(null);
-    window.location.href = "/";
-  };
+    router.push("/");
+    router.refresh();
+  }
 
   return (
-    <UserContext.Provider value={{ user, setUser, logout }}>
+    <UserContext.Provider value={{ user, setUser, logout, isReady }}>
       {children}
     </UserContext.Provider>
   );
 }
 
 export function useUser() {
-  const ctx = useContext(UserContext);
-  if (!ctx) throw new Error("useUser must be inside UserProvider");
-  return ctx;
+  return useContext(UserContext);
 }

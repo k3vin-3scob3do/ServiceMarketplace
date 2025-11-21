@@ -48,17 +48,25 @@ export default function LoginPage() {
         return;
       }
 
-      setUser(res.data); 
-
       toast.success("Inicio de sesión exitoso");
 
       localStorage.setItem("currentUser", JSON.stringify(res.data));
       localStorage.setItem("token", res.data.token ?? "");
 
       const role = res.data.role;
-      if (role === "admin") router.push("/admin");
-      else if (role === "provider") router.push("/provider");
-      else router.push("/");
+      setUser(res.data);
+
+      if (role === "admin") {
+        router.push("/admin");
+      } else if (role === "provider") {
+        router.push("/provider");
+      } else {
+        router.push("/");
+      }
+
+      setTimeout(() => {
+        router.refresh();
+      }, 50);
     } catch (err: any) {
       console.log("ERROR CATCH:", err);
 
