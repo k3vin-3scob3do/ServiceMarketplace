@@ -384,48 +384,173 @@ export default function AdminDashboard() {
         {/* MODAL: DETALLES DE SERVICIO */}
         {selectedService && (
           <div
-            className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
             onClick={() => setSelectedService(null)}
           >
             <div
-              className="bg-white rounded-lg p-6 w-full max-w-lg shadow-xl"
+              className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 className="text-xl font-bold mb-3">{selectedService.name}</h2>
-
-              {selectedService.images?.length ? (
-                <Image
-                  src={selectedService.images[0]}
-                  alt="img"
-                  width={500}
-                  height={300}
-                  className="rounded-lg mb-3"
-                />
-              ) : (
-                <div className="w-full h-48 bg-gray-200 rounded mb-3 flex items-center justify-center text-gray-500">
-                  Sin imagen
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <h2 className="text-xl font-bold">{selectedService.name}</h2>
+                  <button
+                    onClick={() => setSelectedService(null)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
                 </div>
-              )}
 
-              <p className="text-sm">
-                <strong>Categoría:</strong> {selectedService.category}
-              </p>
-              <p className="text-sm">
-                <strong>Proveedor:</strong> {selectedService.provider_name}
-              </p>
-              <p className="text-sm">
-                <strong>Email:</strong> {selectedService.provider_email}
-              </p>
-              <p className="text-sm mb-3">
-                <strong>Descripción:</strong> {selectedService.description}
-              </p>
+                {/* CARRUSEL DE IMÁGENES */}
+                {selectedService.images && selectedService.images.length > 0 ? (
+                  <div className="mb-4">
+                    <div className="relative h-64 w-full rounded-lg overflow-hidden bg-gray-100">
+                      <Image
+                        src={selectedService.images[0]} // Mostrar primera imagen
+                        alt={selectedService.name}
+                        fill
+                        className="object-cover"
+                        unoptimized // Importante para imágenes Base64
+                      />
+                    </div>
 
-              <button
-                onClick={() => setSelectedService(null)}
-                className="w-full bg-pink-600 text-white py-2 rounded hover:bg-pink-700"
-              >
-                Cerrar
-              </button>
+                    {/* Miniaturas si hay más de una imagen */}
+                    {selectedService.images.length > 1 && (
+                      <div className="flex gap-2 mt-3 overflow-x-auto">
+                        {selectedService.images.map((img, index) => (
+                          <div
+                            key={index}
+                            className="relative w-16 h-16 rounded-md overflow-hidden flex-shrink-0 border-2 border-gray-300"
+                          >
+                            <Image
+                              src={img}
+                              alt={`Miniatura ${index + 1}`}
+                              fill
+                              className="object-cover"
+                              unoptimized // Importante para imágenes Base64
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="w-full h-48 bg-gray-200 rounded-lg mb-4 flex items-center justify-center text-gray-500">
+                    Sin imágenes
+                  </div>
+                )}
+
+                {/* INFORMACIÓN DEL SERVICIO */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="font-semibold text-gray-700">Categoría</p>
+                    <p className="text-gray-900 mb-3">
+                      {selectedService.category}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold text-gray-700">Precio</p>
+                    <p className="text-gray-900 mb-3">
+                      ${selectedService.price}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold text-gray-700">Proveedor</p>
+                    <p className="text-gray-900 mb-3">
+                      {selectedService.provider_name || "No especificado"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold text-gray-700">
+                      Email del proveedor
+                    </p>
+                    <p className="text-gray-900 mb-3">
+                      {selectedService.provider_email}
+                    </p>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <p className="font-semibold text-gray-700">Estado</p>
+                    <span
+                      className={`inline-block px-2 py-1 rounded text-xs font-medium ${
+                        selectedService.status === ServiceStatus.APPROVED
+                          ? "bg-green-100 text-green-800"
+                          : selectedService.status === ServiceStatus.PENDING
+                          ? "bg-yellow-100 text-yellow-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {selectedService.status}
+                    </span>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <p className="font-semibold text-gray-700">Descripción</p>
+                    <p className="text-gray-900 whitespace-pre-line mt-1">
+                      {selectedService.description ||
+                        "Sin descripción disponible"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* BOTONES DE ACCIÓN */}
+                <div className="flex gap-3 mt-6 pt-4 border-t">
+                  <button
+                    onClick={async () => {
+                      const res = await updateServiceStatus(
+                        selectedService._id!,
+                        ServiceStatus.APPROVED
+                      );
+                      if (res?.data?.intCode === 200) {
+                        toast.success("Servicio aprobado");
+                        setSelectedService(null);
+                        loadServices();
+                      }
+                    }}
+                    disabled={selectedService.status === ServiceStatus.APPROVED}
+                    className={`flex-1 py-2 rounded transition ${
+                      selectedService.status === ServiceStatus.APPROVED
+                        ? "bg-gray-400 cursor-not-allowed text-gray-200"
+                        : "bg-green-600 text-white hover:bg-green-700"
+                    }`}
+                  >
+                    Aprobar
+                  </button>
+
+                  <button
+                    onClick={async () => {
+                      const res = await updateServiceStatus(
+                        selectedService._id!,
+                        ServiceStatus.REJECTED
+                      );
+                      if (res?.data?.intCode === 200) {
+                        toast.success("Servicio rechazado");
+                        setSelectedService(null);
+                        loadServices();
+                      }
+                    }}
+                    disabled={selectedService.status === ServiceStatus.REJECTED}
+                    className={`flex-1 py-2 rounded transition ${
+                      selectedService.status === ServiceStatus.REJECTED
+                        ? "bg-gray-400 cursor-not-allowed text-gray-200"
+                        : "bg-red-600 text-white hover:bg-red-700"
+                    }`}
+                  >
+                    Rechazar
+                  </button>
+
+                  <button
+                    onClick={() => setSelectedService(null)}
+                    className="flex-1 bg-gray-600 text-white py-2 rounded hover:bg-gray-700 transition"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
