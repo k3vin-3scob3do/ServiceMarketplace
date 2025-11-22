@@ -3,7 +3,7 @@ import { ApiResponse } from "@/app/models/response";
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://127.0.0.1:8000/contract", // URL del backend
+  baseURL: "https://servicemarketplace-tfrl.onrender.com/contract", // URL del backend
 });
 
 export const requestContract = async (contract: ContractModel): Promise<ApiResponse<any>> => {

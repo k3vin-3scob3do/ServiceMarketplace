@@ -3,7 +3,7 @@ import axios from "axios";
 import { ApiResponse } from "../app/models/response";
 
 const API = axios.create({
-  baseURL: "http://127.0.0.1:8000/auth", // URL del backend
+  baseURL: "https://servicemarketplace-tfrl.onrender.com/auth", // URL del backend
 });
 
 export const login = async (user: LoginRequest): Promise<ApiResponse<UserModel>> => {

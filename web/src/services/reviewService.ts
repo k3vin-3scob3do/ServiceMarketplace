@@ -74,7 +74,7 @@ import axios from "axios";
 
 
 const API = axios.create({
-  baseURL: "http://127.0.0.1:8000/review", // URL del backend
+  baseURL: "https://servicemarketplace-tfrl.onrender.com/review", // URL del backend
 });
 
 export const registerReview = async (review: ReviewModel): Promise<ApiResponse<any>> => {

@@ -3,7 +3,7 @@ import { ApiResponse } from "../app/models/response";
 import { ServiceCategory, ServiceModel, ServiceStatus } from "@/app/models/service";
 
 const API = axios.create({
-  baseURL: "http://127.0.0.1:8000/service", // URL del backend
+  baseURL: "https://servicemarketplace-tfrl.onrender.com/service", // URL del backend
 });
 
 export const registerService = async (service: ServiceModel): Promise<ApiResponse<any>> => {
