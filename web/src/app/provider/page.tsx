@@ -116,7 +116,7 @@ export default function ProviderDashboard() {
 
       <section className="max-w-7xl mx-auto px-6 py-10 space-y-10">
         {/* MÉTRICAS PRINCIPALES */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
+        {/* <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
           <StatCard
             title="Servicios Publicados"
             value="12"
@@ -145,7 +145,7 @@ export default function ProviderDashboard() {
             value="$2,450"
             icon={<DollarSign className="w-6 h-6 text-gray-600" />}
           />
-        </div>
+        </div> */}
 
         {/* PUBLICAR NUEVO */}
         <div>
